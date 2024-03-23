@@ -528,7 +528,7 @@ def check_imshow(warn=False):
     try:
         if LINUX:
             assert "DISPLAY" in os.environ and not is_docker() and not is_colab() and not is_kaggle()
-        cv2.imshow("test", np.zeros((8, 8, 3), dtype=np.uint8))  # show a small 8-pixel image
+        cv2.imshow("train", np.zeros((8, 8, 3), dtype=np.uint8))  # show a small 8-pixel image
         cv2.waitKey(1)
         cv2.destroyAllWindows()
         cv2.waitKey(1)

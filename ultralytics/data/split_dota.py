@@ -249,29 +249,29 @@ def split_trainval(data_root, save_dir, crop_size=1024, gap=200, rates=[1.0]):
 
 def split_test(data_root, save_dir, crop_size=1024, gap=200, rates=[1.0]):
     """
-    Split test set of DOTA, labels are not included within this set.
+    Split train set of DOTA, labels are not included within this set.
 
     Notes:
         The directory structure assumed for the DOTA dataset:
             - data_root
                 - images
-                    - test
+                    - train
         and the output directory structure is:
             - save_dir
                 - images
-                    - test
+                    - train
     """
     crop_sizes, gaps = [], []
     for r in rates:
         crop_sizes.append(int(crop_size / r))
         gaps.append(int(gap / r))
-    save_dir = Path(save_dir) / "images" / "test"
+    save_dir = Path(save_dir) / "images" / "train"
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    im_dir = Path(data_root) / "images" / "test"
+    im_dir = Path(data_root) / "images" / "train"
     assert im_dir.exists(), f"Can't find {im_dir}, please check your data root."
     im_files = glob(str(im_dir / "*"))
-    for im_file in tqdm(im_files, total=len(im_files), desc="test"):
+    for im_file in tqdm(im_files, total=len(im_files), desc="train"):
         w, h = exif_size(Image.open(im_file))
         windows = get_windows((h, w), crop_sizes=crop_sizes, gaps=gaps)
         im = cv2.imread(im_file)

@@ -32,7 +32,7 @@ def test_det():
     assert len(exp.table.head()["bboxes"]) > 0
     similar = exp.get_similar(idx=[1, 2], limit=10)
     assert len(similar) > 0
-    # This is a loose test, just checks errors not correctness
+    # This is a loose train, just checks errors not correctness
     similar = exp.plot_similar(idx=[1, 2], limit=10)
     assert isinstance(similar, PIL.Image.Image)
 

@@ -7,7 +7,7 @@
 # └── datasets
 #     └── GlobalWheat2020  ← downloads here (7.0 GB)
 
-# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+# Train/val/train sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
 path: ../datasets/GlobalWheat2020 # dataset root dir
 train: # train images (relative to 'path') 3422 images
   - images/arvalis_1
@@ -19,7 +19,7 @@ train: # train images (relative to 'path') 3422 images
   - images/usask_1
 val: # val images (relative to 'path') 748 images (WARNING: train set contains ethz_1)
   - images/ethz_1
-test: # test images (optional) 1276 images
+test: # train images (optional) 1276 images
   - images/utokyo_1
   - images/utokyo_2
   - images/nau_1

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-TMP = Path(__file__).resolve().parent / "tmp"  # temp directory for test files
+TMP = Path(__file__).resolve().parent / "tmp"  # temp directory for train files
 
 
 def pytest_addoption(parser):
@@ -25,7 +25,7 @@ def pytest_configure(config):
     Args:
         config (pytest.config.Config): The pytest config object.
     """
-    config.addinivalue_line("markers", "slow: mark test as slow to run")
+    config.addinivalue_line("markers", "slow: mark train as slow to run")
 
 
 def pytest_runtest_setup(item):
@@ -33,7 +33,7 @@ def pytest_runtest_setup(item):
     Setup hook to skip tests marked as slow if the --slow option is not provided.
 
     Args:
-        item (pytest.Item): The test item object.
+        item (pytest.Item): The train item object.
     """
     if "slow" in item.keywords and not item.config.getoption("--slow"):
         pytest.skip("skip slow tests unless --slow is set")
@@ -41,14 +41,14 @@ def pytest_runtest_setup(item):
 
 def pytest_collection_modifyitems(config, items):
     """
-    Modify the list of test items to remove tests marked as slow if the --slow option is not provided.
+    Modify the list of train items to remove tests marked as slow if the --slow option is not provided.
 
     Args:
         config (pytest.config.Config): The pytest config object.
-        items (list): List of test items to be executed.
+        items (list): List of train items to be executed.
     """
     if not config.getoption("--slow"):
-        # Remove the item entirely from the list of test items if it's marked as 'slow'
+        # Remove the item entirely from the list of train items if it's marked as 'slow'
         items[:] = [item for item in items if "slow" not in item.keywords]
 
 
@@ -57,7 +57,7 @@ def pytest_sessionstart(session):
     Initialize session configurations for pytest.
 
     This function is automatically called by pytest after the 'Session' object has been created but before performing
-    test collection. It sets the initial seeds and prepares the temporary directory for the test session.
+    train collection. It sets the initial seeds and prepares the temporary directory for the train session.
 
     Args:
         session (pytest.Session): The pytest session object.
@@ -73,12 +73,12 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """
     Cleanup operations after pytest session.
 
-    This function is automatically called by pytest at the end of the entire test session. It removes certain files
+    This function is automatically called by pytest at the end of the entire train session. It removes certain files
     and directories used during testing.
 
     Args:
         terminalreporter (pytest.terminal.TerminalReporter): The terminal reporter object.
-        exitstatus (int): The exit status of the test run.
+        exitstatus (int): The exit status of the train run.
         config (pytest.config.Config): The pytest config object.
     """
     from ultralytics.utils import WEIGHTS_DIR

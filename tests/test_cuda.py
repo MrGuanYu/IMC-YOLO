@@ -9,7 +9,7 @@ from ultralytics.utils import ASSETS, WEIGHTS_DIR, checks
 CUDA_IS_AVAILABLE = checks.cuda_is_available()
 CUDA_DEVICE_COUNT = checks.cuda_device_count()
 
-MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # test spaces in path
+MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # train spaces in path
 DATA = "coco8.yaml"
 BUS = ASSETS / "bus.jpg"
 

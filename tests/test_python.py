@@ -32,17 +32,17 @@ from ultralytics.utils import (
 from ultralytics.utils.downloads import download
 from ultralytics.utils.torch_utils import TORCH_1_9, TORCH_1_13
 
-MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # test spaces in path
+MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # train spaces in path
 CFG = "yolov8n.yaml"
 SOURCE = ASSETS / "bus.jpg"
-TMP = (ROOT / "../tests/tmp").resolve()  # temp directory for test files
+TMP = (ROOT / "../tests/tmp").resolve()  # temp directory for train files
 IS_TMP_WRITEABLE = is_dir_writeable(TMP)
 
 
 def test_model_forward():
     """Test the forward pass of the YOLO model."""
     model = YOLO(CFG)
-    model(source=None, imgsz=32, augment=True)  # also test no source and augment
+    model(source=None, imgsz=32, augment=True)  # also train no source and augment
 
 
 def test_model_methods():
@@ -173,7 +173,7 @@ def test_track_stream():
     video_url = "https://ultralytics.com/assets/decelera_portrait_min.mov"
     model = YOLO(MODEL)
     model.track(video_url, imgsz=160, tracker="bytetrack.yaml")
-    model.track(video_url, imgsz=160, tracker="botsort.yaml", save_frames=True)  # test frame saving also
+    model.track(video_url, imgsz=160, tracker="botsort.yaml", save_frames=True)  # train frame saving also
 
     # Test Global Motion Compensation (GMC) methods
     for gmc in "orb", "sift", "ecc":
@@ -384,7 +384,7 @@ def test_events():
     events = Events()
     events.enabled = True
     cfg = copy(DEFAULT_CFG)  # does not require deepcopy
-    cfg.mode = "test"
+    cfg.mode = "train"
     events(cfg)
 
 
@@ -503,7 +503,7 @@ def test_utils_patches_torch_save():
 
     with patch("ultralytics.utils.patches._torch_save", new=mock):
         with pytest.raises(RuntimeError):
-            torch_save(torch.zeros(1), TMP / "test.pt")
+            torch_save(torch.zeros(1), TMP / "train.pt")
 
     assert mock.call_count == 4, "torch_save was not attempted the expected number of times"
 
@@ -611,6 +611,6 @@ def test_model_embeddings():
     model_detect = YOLO(MODEL)
     model_segment = YOLO(WEIGHTS_DIR / "yolov8n-seg.pt")
 
-    for batch in [SOURCE], [SOURCE, SOURCE]:  # test batch size 1 and 2
+    for batch in [SOURCE], [SOURCE, SOURCE]:  # train batch size 1 and 2
         assert len(model_detect.embed(source=batch, imgsz=32)) == len(batch)
         assert len(model_segment.embed(source=batch, imgsz=32)) == len(batch)

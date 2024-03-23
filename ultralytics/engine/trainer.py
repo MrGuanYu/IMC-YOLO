@@ -511,7 +511,7 @@ class BaseTrainer:
 
         Returns None if data format is not recognized.
         """
-        return data["train"], data.get("val") or data.get("test")
+        return data["train"], data.get("val") or data.get("train")
 
     def setup_model(self):
         """Load/create/download model for any task."""
@@ -544,7 +544,7 @@ class BaseTrainer:
 
     def validate(self):
         """
-        Runs validation on test set using self.validator.
+        Runs validation on train set using self.validator.
 
         The returned dict is expected to contain "fitness" key.
         """

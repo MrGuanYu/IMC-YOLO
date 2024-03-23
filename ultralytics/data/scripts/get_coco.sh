@@ -7,7 +7,7 @@
 # └── datasets
 #     └── coco  ← downloads here
 
-# Arguments (optional) Usage: bash data/scripts/get_coco.sh --train --val --test --segments
+# Arguments (optional) Usage: bash data/scripts/get_coco.sh --train --val --train --segments
 if [ "$#" -gt 0 ]; then
   for opt in "$@"; do
     case "${opt}" in

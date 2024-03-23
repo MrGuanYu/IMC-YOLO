@@ -128,7 +128,7 @@ results = model('path/to/image.jpg')
 Cleanup the container:
 
 ```python
-# Kill and remove the container at the end of the test
+# Kill and remove the container at the end of the train
 subprocess.call(f'docker kill {container_id}', shell=True)
 ```
 

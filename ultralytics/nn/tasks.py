@@ -65,6 +65,14 @@ from ultralytics.utils.torch_utils import (
     time_sync,
 )
 
+
+#my add
+######################
+from .addModule import *
+
+######################
+
+
 try:
     import thop
 except ImportError:
@@ -867,6 +875,14 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             DWConvTranspose2d,
             C3x,
             RepC3,
+            #~~~~~~~~~~~~~~~~~~
+            C2f_DCNv3_DLKA,
+            lskaSPPF,
+            hwdcbamC2f,
+            cbamC2f,
+            Down_wt,
+            C2f_DCN
+            #~~~~~~~~~~~~~~~~~~
         ):
             c1, c2 = ch[f], args[0]
             if c2 != nc:  # if c2 not equal to number of classes (i.e. for Classify() output)
@@ -878,7 +894,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
                 )  # num heads
 
             args = [c1, c2, *args[1:]]
-            if m in (BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3):
+            if m in (BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3,C2f_DCNv3_DLKA,hwdcbamC2f,cbamC2f):
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is AIFI:
@@ -907,6 +923,42 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             args = [c1, c2, *args[1:]]
         elif m is CBFuse:
             c2 = ch[f[-1]]
+
+
+        #~~~~~~~~~~~~~~~~~~~
+        elif m in (deformable_LKA_Attention,EMA):
+            c2=ch[f]
+            args=[c2,*args]
+
+        elif m is RCSOSA:
+            c1, c2 = ch[f], args[0]
+            if c2 != nc:  # if c2 not equal to number of classes (i.e. for Classify() output)
+                c2 = make_divisible(min(c2, max_channels) * width, 8)
+            args = [c1, c2, *args[1:]]
+
+        elif m is SDI:
+            args = [[ch[x] for x in f]]
+
+        elif m is DAttentionBaseline:
+            args = [ch[f],*args]
+
+        elif m in {LSKA}:
+            args = [ch[f], *args]
+
+        elif m is Down_wt:
+            args = [ch[f], *args]
+
+        elif m is LocalWindowAttention:
+            args = [ch[f], *args]
+
+        elif m is OutlookAttention:
+            args = [ch[f], *args]
+
+        elif m is StokenAttention:
+            args = [ch[f], *args]
+
+        #~~~~~~~~~~~~~~~~~~~
+
         else:
             c2 = ch[f]
 

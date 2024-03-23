@@ -9,10 +9,10 @@ from ultralytics import YOLO, download
 from ultralytics.utils import ASSETS, DATASETS_DIR, ROOT, SETTINGS, WEIGHTS_DIR
 from ultralytics.utils.checks import check_requirements
 
-MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # test spaces in path
+MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # train spaces in path
 CFG = "yolov8n.yaml"
 SOURCE = ASSETS / "bus.jpg"
-TMP = (ROOT / "../tests/tmp").resolve()  # temp directory for test files
+TMP = (ROOT / "../tests/tmp").resolve()  # temp directory for train files
 
 
 @pytest.mark.skipif(not check_requirements("ray", install=False), reason="ray[tune] not installed")
@@ -109,7 +109,7 @@ def test_triton():
     # Check Triton inference
     YOLO(f"http://localhost:8000/{model_name}", "detect")(SOURCE)  # exported model inference
 
-    # Kill and remove the container at the end of the test
+    # Kill and remove the container at the end of the train
     subprocess.call(f"docker kill {container_id}", shell=True)
 
 

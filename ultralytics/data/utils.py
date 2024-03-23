@@ -303,7 +303,7 @@ def check_det_dataset(dataset, autodownload=True):
 
     # Set paths
     data["path"] = path  # download scripts
-    for k in "train", "val", "test":
+    for k in "train", "val", "train":
         if data.get(k):  # prepend path
             if isinstance(data[k], str):
                 x = (path / data[k]).resolve()
@@ -351,13 +351,13 @@ def check_cls_dataset(dataset, split=""):
 
     Args:
         dataset (str | Path): The name of the dataset.
-        split (str, optional): The split of the dataset. Either 'val', 'test', or ''. Defaults to ''.
+        split (str, optional): The split of the dataset. Either 'val', 'train', or ''. Defaults to ''.
 
     Returns:
         (dict): A dictionary containing the following keys:
             - 'train' (Path): The directory path containing the training set of the dataset.
             - 'val' (Path): The directory path containing the validation set of the dataset.
-            - 'test' (Path): The directory path containing the test set of the dataset.
+            - 'train' (Path): The directory path containing the train set of the dataset.
             - 'nc' (int): The number of classes in the dataset.
             - 'names' (dict): A dictionary of class names in the dataset.
     """
@@ -388,19 +388,19 @@ def check_cls_dataset(dataset, split=""):
         else data_dir / "validation"
         if (data_dir / "validation").exists()
         else None
-    )  # data/test or data/val
-    test_set = data_dir / "test" if (data_dir / "test").exists() else None  # data/val or data/test
+    )  # data/train or data/val
+    test_set = data_dir / "train" if (data_dir / "train").exists() else None  # data/val or data/train
     if split == "val" and not val_set:
-        LOGGER.warning("WARNING ⚠️ Dataset 'split=val' not found, using 'split=test' instead.")
-    elif split == "test" and not test_set:
-        LOGGER.warning("WARNING ⚠️ Dataset 'split=test' not found, using 'split=val' instead.")
+        LOGGER.warning("WARNING ⚠️ Dataset 'split=val' not found, using 'split=train' instead.")
+    elif split == "train" and not test_set:
+        LOGGER.warning("WARNING ⚠️ Dataset 'split=train' not found, using 'split=val' instead.")
 
     nc = len([x for x in (data_dir / "train").glob("*") if x.is_dir()])  # number of classes
     names = [x.name for x in (data_dir / "train").iterdir() if x.is_dir()]  # class names list
     names = dict(enumerate(sorted(names)))
 
     # Print to console
-    for k, v in {"train": train_set, "val": val_set, "test": test_set}.items():
+    for k, v in {"train": train_set, "val": val_set, "train": test_set}.items():
         prefix = f'{colorstr(f"{k}:")} {v}...'
         if v is None:
             LOGGER.info(prefix)
@@ -418,7 +418,7 @@ def check_cls_dataset(dataset, split=""):
             else:
                 LOGGER.info(f"{prefix} found {nf} images in {nd} classes ✅ ")
 
-    return {"train": train_set, "val": val_set, "test": test_set, "nc": nc, "names": names}
+    return {"train": train_set, "val": val_set, "train": test_set, "nc": nc, "names": names}
 
 
 class HUBDatasetStats:
@@ -505,7 +505,7 @@ class HUBDatasetStats:
             zipped = zip(labels["cls"], coordinates)
             return [[int(c[0]), *(round(float(x), 4) for x in points)] for c, points in zipped]
 
-        for split in "train", "val", "test":
+        for split in "train", "val", "train":
             self.stats[split] = None  # predefine
             path = self.data.get(split)
 
@@ -567,7 +567,7 @@ class HUBDatasetStats:
         from ultralytics.data import YOLODataset  # ClassificationDataset
 
         self.im_dir.mkdir(parents=True, exist_ok=True)  # makes dataset-hub/images/
-        for split in "train", "val", "test":
+        for split in "train", "val", "train":
             if self.data.get(split) is None:
                 continue
             dataset = YOLODataset(img_path=self.data[split], data=self.data)
@@ -618,11 +618,11 @@ def compress_one_image(f, f_new=None, max_dim=1920, quality=50):
 
 def autosplit(path=DATASETS_DIR / "coco8/images", weights=(0.9, 0.1, 0.0), annotated_only=False):
     """
-    Automatically split a dataset into train/val/test splits and save the resulting splits into autosplit_*.txt files.
+    Automatically split a dataset into train/val/train splits and save the resulting splits into autosplit_*.txt files.
 
     Args:
         path (Path, optional): Path to images directory. Defaults to DATASETS_DIR / 'coco8/images'.
-        weights (list | tuple, optional): Train, validation, and test split fractions. Defaults to (0.9, 0.1, 0.0).
+        weights (list | tuple, optional): Train, validation, and train split fractions. Defaults to (0.9, 0.1, 0.0).
         annotated_only (bool, optional): If True, only images with an associated txt file are used. Defaults to False.
 
     Example:

@@ -431,7 +431,7 @@ def entrypoint(debug=""):
     This function allows for:
     - passing mandatory YOLO args as a list of strings
     - specifying the task to be performed, either 'detect', 'segment' or 'classify'
-    - specifying the mode, either 'train', 'val', 'test', or 'predict'
+    - specifying the mode, either 'train', 'val', 'train', or 'predict'
     - running special modes like 'checks'
     - passing overrides to the package's configuration
 
