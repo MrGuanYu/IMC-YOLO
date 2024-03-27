@@ -881,7 +881,9 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             hwdcbamC2f,
             cbamC2f,
             Down_wt,
-            C2f_DCN
+            C2f_DCN,
+            dcnv3C2f
+
             #~~~~~~~~~~~~~~~~~~
         ):
             c1, c2 = ch[f], args[0]
@@ -894,7 +896,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
                 )  # num heads
 
             args = [c1, c2, *args[1:]]
-            if m in (BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3,C2f_DCNv3_DLKA,hwdcbamC2f,cbamC2f):
+            if m in (BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3,C2f_DCNv3_DLKA,hwdcbamC2f,cbamC2f,dcnv3C2f):
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is AIFI:
@@ -955,6 +957,9 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             args = [ch[f], *args]
 
         elif m is StokenAttention:
+            args = [ch[f], *args]
+
+        elif m is FocalModulation:
             args = [ch[f], *args]
 
         #~~~~~~~~~~~~~~~~~~~

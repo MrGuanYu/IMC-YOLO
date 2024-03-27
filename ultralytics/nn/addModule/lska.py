@@ -51,6 +51,15 @@ class LSKA(nn.Module):
             self.conv_spatial_v = nn.Conv2d(dim, dim, kernel_size=(17, 1), stride=(1, 1), padding=(24, 0), groups=dim,
                                             dilation=3)
 
+        # elif k_size == 5:
+        #     self.conv0h = nn.Conv2d(dim, dim, kernel_size=(1, 3), stride=(1, 1), padding=(0, (3 - 1) // 2), groups=dim)
+        #     self.conv0v = nn.Conv2d(dim, dim, kernel_size=(3, 1), stride=(1, 1), padding=((3 - 1) // 2, 0), groups=dim)
+        #     self.conv_spatial_h = nn.Conv2d(dim, dim, kernel_size=(1, 1), stride=(1, 1), padding=(0, 2), groups=dim,
+        #                                     dilation=2)
+        #     self.conv_spatial_v = nn.Conv2d(dim, dim, kernel_size=(1, 1), stride=(1, 1), padding=(2, 0), groups=dim,
+        #                                     dilation=2)
+
+
         self.conv1 = nn.Conv2d(dim, dim, 1)
 
     def forward(self, x):

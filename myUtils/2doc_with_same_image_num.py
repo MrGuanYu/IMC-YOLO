@@ -27,8 +27,8 @@ def count_duplicate_images(directory1, directory2):
     return sum(duplicates.values())
 
 # 指定两个文件夹路径进行比较
-directory1 = r"D:\program6\python\ultralytics\myDatasets\Datasets\clam_hole\train\images"
-directory2 = r"D:\program6\python\ultralytics\myDatasets\Datasets\clam_hole\val\images"
+directory1 = r"D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhance_testInVal\test\images"
+directory2 = r"D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhance_testInVal\test\images"
 
 duplicate_count = count_duplicate_images(directory1, directory2)
 print("Number of duplicate images:", duplicate_count)

@@ -37,7 +37,7 @@ def addGaussianNoise(image, percetage):
 
 
 # 昏暗
-def darker(image, percetage=0.6):
+def darker(image, percetage=0.5):
     image_copy = image.copy()
     w = image.shape[1]
     h = image.shape[0]
@@ -51,7 +51,7 @@ def darker(image, percetage=0.6):
 
 
 # 亮度
-def brighter(image, percetage=1.6):
+def brighter(image, percetage=1.5):
     image_copy = image.copy()
     w = image.shape[1]
     h = image.shape[0]
@@ -88,9 +88,11 @@ import os
 import random
 import shutil
 
+
+#okokok thanks!
 # target_num = 250  # 目标增强图片数量
-image_folder = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\finalGuodu\train'  # 图片文件夹路径
-save_folder = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\final\train'  # 保存增强后的图片的文件夹路径
+image_folder = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole\train'  # 图片文件夹路径
+save_folder = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhance\train'  # 保存增强后的图片的文件夹路径
 
 
 # label_folder = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\mdAAA\train\labels'
