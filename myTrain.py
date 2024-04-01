@@ -3,7 +3,7 @@ warnings.filterwarnings('ignore')
 from ultralytics import YOLO
 
 if __name__ == '__main__':
-    model = YOLO(r'ultralytics/cfg/models/v8/yolov8n-dcnv3.yaml')
+    model = YOLO(r'ultralytics/cfg/models/v8/yolov8n-myhwd.yaml')
     # model.load('yolov8n.pt') # loading pretrain weights
     model.train(task='detect',
                 data=r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhance_03\data.yaml',
@@ -20,9 +20,9 @@ if __name__ == '__main__':
                 # amp=False, # close amp
                 # fraction=0.2,
                 # project='runs/train',
-                name='yolov8n-dcnv3',
+                name='yolov8n-myhwd',
                 pretrained=False,
-                patience=100,
+                patience=50,
                 lr0=0.001,
                 amp=False,
                 plots=True,

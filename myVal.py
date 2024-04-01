@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
 if __name__ == '__main__':
-    model = YOLO(r'D:\program\python\ultralytics_withV9\runs\detect\yolov8n-dcnv32\weights\best.pt')
+    model = YOLO(r'D:\program\python\ultralytics_withV9\runs\detect\yolov8n-myhwd2\weights\best.pt')
     model.val(data=r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhance_03\data.yaml',
               split = 'test',
               cache=False,

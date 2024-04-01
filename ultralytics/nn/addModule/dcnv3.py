@@ -7,6 +7,7 @@ from torch.nn.init import xavier_uniform_, constant_
 __all__ = ['dcnv3C2f']
 
 from ultralytics.nn.modules import Conv
+from ultralytics.nn.modules.conv import autopad
 
 
 def _get_reference_points(spatial_shapes, device, kernel_h, kernel_w, dilation_h, dilation_w, pad_h=0, pad_w=0,
@@ -356,9 +357,40 @@ class dcnv3C2f(nn.Module):
         y.extend(m(y[-1]) for m in self.m)
         return self.cv2(torch.cat(y, 1))
 
+
+class dcnv3Conv(nn.Module):
+    """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""
+
+    default_act = nn.SiLU()  # default activation
+
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
+        """Initialize Conv layer with given arguments including activation."""
+        super().__init__()
+        # self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p, d), groups=g, dilation=d, bias=False)
+        self.conv = DCNv3_pytorch(c2)
+        self.bn = nn.BatchNorm2d(c2)
+        self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
+
+    def forward(self, x):
+        """Apply convolution, batch normalization and activation to input tensor."""
+        return self.act(self.bn(self.conv(x)))
+
+    def forward_fuse(self, x):
+        """Perform transposed convolution of 2D data."""
+        return self.act(self.conv(x))
+
+
+
+
+
 # 输入 N C H W,  输出 N C H W
 if __name__ == '__main__':
-    block = DCNv3_pytorch(64, 64)  # 输入通道数，输出通道数
+    block = DCNv3_pytorch(64)  # 输入通道数，输出通道数
     input = torch.rand(3, 64, 64, 64)
     output = block(input)
     print(output.size())
+    #
+    # input = torch.rand(3, 64, 64, 64)
+    # net = dcnv3Conv(64,64)
+    # x = net(input)
+    # print(x.size())

@@ -14,14 +14,18 @@ class Down_wt(nn.Module):
         )
 
     def forward(self, x):
-        # print(x.shape)
+        # print(x.shape)a
         yL, yH = self.wt(x)
+        print(yL.size())
+        # print(yH.size())
         y_HL = yH[0][:, :, 0, ::]
-        # print(y_HL.shape)
+        print(y_HL.shape)
         y_LH = yH[0][:, :, 1, ::]
         y_HH = yH[0][:, :, 2, ::]
         x = torch.cat([yL, y_HL, y_LH, y_HH], dim=1)
+
         x = self.conv_bn_relu(x)
+
         return x
 
 

@@ -14,3 +14,16 @@ from .dcnv2 import *
 from .svit import *
 from .focalmodulation import *
 from .dcnv3 import *
+from .effvit import *
+from .emacbamBING import *
+from .emacbamirmb import *
+from .mbTaylorformer import *
+from .aod import *
+from .bifpn import *
+from .slimneck import *
+from .emasppf import *
+from .myMLCA import *
+from .myCBAM import *
+from .gam import *
+from .rephead import *
+from .myhwd import *
