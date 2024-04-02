@@ -7,20 +7,80 @@ from pytorch_wavelets import DWTForward
 
 from ultralytics.nn.modules import Conv
 
+import torch
+import torch.nn as nn
+import math
+import torch.nn.functional as F
+
+
+class h_sigmoid(nn.Module):
+    def __init__(self, inplace=True):
+        super(h_sigmoid, self).__init__()
+        self.relu = nn.ReLU6(inplace=inplace)
+
+    def forward(self, x):
+        return self.relu(x + 3) / 6
+
+
+class h_swish(nn.Module):
+    def __init__(self, inplace=True):
+        super(h_swish, self).__init__()
+        self.sigmoid = h_sigmoid(inplace=inplace)
+
+    def forward(self, x):
+        return x * self.sigmoid(x)
+
+
+class CoordAtt(nn.Module):
+    def __init__(self, inp, reduction=32):
+        super(CoordAtt, self).__init__()
+        oup = inp
+        self.pool_h = nn.AdaptiveAvgPool2d((None, 1))
+        self.pool_w = nn.AdaptiveAvgPool2d((1, None))
+
+        mip = max(8, inp // reduction)
+
+        self.conv1 = nn.Conv2d(inp, mip, kernel_size=1, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(mip)
+        self.act = h_swish()
+
+        self.conv_h = nn.Conv2d(mip, oup, kernel_size=1, stride=1, padding=0)
+        self.conv_w = nn.Conv2d(mip, oup, kernel_size=1, stride=1, padding=0)
+
+    def forward(self, x):
+        identity = x
+
+        n, c, h, w = x.size()
+        x_h = self.pool_h(x)
+        x_w = self.pool_w(x).permute(0, 1, 3, 2)
+
+        y = torch.cat([x_h, x_w], dim=2)
+        y = self.conv1(y)
+        y = self.bn1(y)
+        y = self.act(y)
+
+        x_h, x_w = torch.split(y, [h, w], dim=2)
+        x_w = x_w.permute(0, 1, 3, 2)
+
+        a_h = self.conv_h(x_h).sigmoid()
+        a_w = self.conv_w(x_w).sigmoid()
+
+        out = identity * a_w * a_h
+
+        return out
 
 class myChannelAttention(nn.Module):
-    def __init__(self, in_planes, ratio=16,local_size=5, local_weight=0.5):
+    def __init__(self, in_planes, ratio=16):
         super(myChannelAttention, self).__init__()
 
-        self.local_size = local_size
-        self.local_weight = local_weight
 
+        # self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        # self.max_pool = nn.AdaptiveMaxPool2d(1)
 
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.max_pool = nn.AdaptiveMaxPool2d(1)
-
-        self.local_avg_pool = nn.AdaptiveAvgPool2d(local_size)
-        self.local_max_pool = nn.AdaptiveAvgPool2d(local_size)
+        self.avg_pool_h = nn.AdaptiveAvgPool2d((None, 1))
+        self.max_pool_w = nn.AdaptiveMaxPool2d((1, None))
+        self.avg_pool_w = nn.AdaptiveAvgPool2d((1, None))
+        self.max_pool_h = nn.AdaptiveMaxPool2d((None, 1))
 
 
         # t = int(abs(math.log(in_planes, 2) + self.b) / self.gamma)  # eca  gamma=2
@@ -35,22 +95,22 @@ class myChannelAttention(nn.Module):
 
     def forward(self, x):
         # global_avg_out = self.fc2(self.relu1(self.fc1(self.avg_pool(x))))
-        local_avg_out = self.fc2(self.relu1(self.fc1(self.local_avg_pool(x))))
+
 
         # global_max_out = self.fc2(self.relu1(self.fc1(self.max_pool(x))))
-        local_max_out = self.fc2(self.relu1(self.fc1(self.local_max_pool(x))))
+
 
         # global_avg_out = F.adaptive_avg_pool2d(global_avg_out, [self.local_size, self.local_size])
         # global_max_out = F.adaptive_max_pool2d(global_max_out, [self.local_size, self.local_size])
 
-        # avg_out = self.fc2(self.relu1(self.fc1(self.avg_pool(x))))
-        # max_out = self.fc2(self.relu1(self.fc1(self.max_pool(x))))
+        out1 = self.fc2(self.relu1(self.fc1(self.max_pool_w(self.avg_pool_h(x)))))
+        out2 = self.fc2(self.relu1(self.fc1(self.max_pool_h(self.avg_pool_w(x)))))
 
         # avg_out = global_avg_out * (1-self.local_weight) + local_avg_out * self.local_weight
         # max_out = global_max_out * (1-self.local_weight) + local_max_out * self.local_weight
 
-        # out = avg_out + max_out
-        out = local_avg_out + local_max_out
+        out = out1 + out2
+
         return self.sigmoid(out)
 
 
@@ -167,27 +227,14 @@ class ChannelAttention(nn.Module):
 class myCBAM(nn.Module):
     def __init__(self, in_planes, ratio=16, kernel_size=7):
         super(myCBAM, self).__init__()
-        # self.ca = myChannelAttention(in_planes, ratio)
+        self.ca = myChannelAttention(in_planes, ratio)
         self.sa = SpatialAttention(kernel_size)
-        self.ca = ChannelAttention(in_planes, ratio)
-        # self.myca = myChannelAttention(in_planes, ratio)
-
-        self.wt = DWTForward(J=1, mode='zero', wave='haar')
 
     def forward(self, x):
-        # out = x * self.ca(x)
-        yL, yH = self.wt(x)
-        # print(yL.size())
-        # print(yH.size())
-        y_HL = yH[0][:, :, 0, ::]
-        # print(y_HL.shape)
-        y_LH = yH[0][:, :, 1, ::]
-        y_HH = yH[0][:, :, 2, ::]
-
-        # ca_temp =  F.adaptive_avg_pool2d(self.ca(x), (x.size()[2],x.size()[3]))
         out = x * self.ca(x)
         result = out * self.sa(out)
         return result
+
 
 
 class mycbamBottleneck(nn.Module):
@@ -243,13 +290,13 @@ if __name__ == '__main__':
 
 
 
-if __name__ == "__main__":
-    # attention = myChannelAttention(32)
-    # inputs = torch.randn((16, 32, 64, 64))
-    # result = attention(inputs)
-    # print(result.shape)
-
-    net = mutiChannelAttention(32)
-    inputs = torch.randn((16, 32, 64, 64))
-    out = net(inputs)
-    print(out)
+# if __name__ == "__main__":
+#     # attention = myChannelAttention(32)
+#     # inputs = torch.randn((16, 32, 64, 64))
+#     # result = attention(inputs)
+#     # print(result.shape)
+#
+#     net = mycbamC2f(32)
+#     inputs = torch.randn((16, 32, 64, 64))
+#     out = net(inputs)
+#     print(out.size())
