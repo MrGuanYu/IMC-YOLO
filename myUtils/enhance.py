@@ -91,8 +91,8 @@ import shutil
 
 #okokok thanks!
 # target_num = 250  # 目标增强图片数量
-image_folder = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole\train'  # 图片文件夹路径
-save_folder = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhance\train'  # 保存增强后的图片的文件夹路径
+image_folder = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole\val'  # 图片文件夹路径
+save_folder = r'D:\program\python\ultralytics_withV9\myDatasets\datasetsOrigin\temp'  # 保存增强后的图片的文件夹路径
 
 
 # label_folder = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\mdAAA\train\labels'
@@ -104,39 +104,40 @@ def augment_image(image):
     save_path = os.path.join(save_folder, 'images')
 
     img = cv2.imread(os.path.join(image_path, image))
-    cv2.imwrite(os.path.join(save_path,image),img)
-    shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
-                os.path.join(save_folder, 'labels', image.split('.')[0] + '.txt'))
-
-    # cv2.imshow("1",img)
+    # cv2.imwrite(os.path.join(save_path,image),img)
+    # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
+    #             os.path.join(save_folder, 'labels', image.split('.')[0] + '.txt'))
+    #
+    # # cv2.imshow("1",img)
     # cv2.waitKey(5000)
     # 旋转
     # rotated_90 = rotate(img, 90)
     # cv2.imwrite(save_path + "".join(name) + '_r90.' + extension, rotated_90)
     # rotated_180 = rotate(img, 180)
     # cv2.imwrite(save_path + "".join(name) + '_r180.' + extension, rotated_180)
-    # flipped_img = flip(img)
-    #
-    # cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_flip.jpg'), flipped_img)
-    # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
-    #             os.path.join(save_folder, 'labels', image.split('.')[0] + '_flip.txt'))
-    # with open(os.path.join(save_folder, 'labels', image.split('.')[0] + '_flip.txt'), 'r') as file:
-    #     lines = file.readlines()
-    # modified_lines = []
-    # for line in lines:
-    #     parts = line.split()  # 将每行拆分为单词或数字
-    #     if len(parts) >= 2:  # 确保至少有两个元素
-    #         try:
-    #             number = parts[1]  # 尝试将第二个元素转换为整数
-    #             new_number = 1.0 - float(number)  # 更改数字的值
-    #             parts[1] = str(new_number)  # 将新值转换为字符串
-    #         except ValueError:
-    #             pass  # 跳过无法转换为整数的行
-    #
-    #     modified_line = ' '.join(parts)  # 将更新后的行重新连接起来
-    #     modified_lines.append(modified_line)
-    # with open(os.path.join(save_folder,'labels', image.split('.')[0] + '_flip.txt'), 'w') as file:
-    #     file.writelines(modified_lines)
+    flipped_img = flip(img)
+
+    cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_flip.jpg'), flipped_img)
+    shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
+                os.path.join(save_folder, 'labels', image.split('.')[0] + '_flip.txt'))
+    with open(os.path.join(save_folder, 'labels', image.split('.')[0] + '_flip.txt'), 'r') as file:
+        lines = file.readlines()
+    modified_lines = []
+    for line in lines:
+        parts = line.split()  # 将每行拆分为单词或数字
+        if len(parts) >= 2:  # 确保至少有两个元素
+            try:
+                number = parts[1]  # 尝试将第二个元素转换为整数
+                new_number = 1.0 - float(number)  # 更改数字的值
+                parts[1] = str(new_number)  # 将新值转换为字符串
+            except ValueError:
+                pass  # 跳过无法转换为整数的行
+
+        modified_line = ' '.join(parts)  # 将更新后的行重新连接起来
+        modified_lines.append(modified_line + '\n')
+
+    with open(os.path.join(save_folder,'labels', image.split('.')[0] + '_flip.txt'), 'w') as file:
+        file.writelines(modified_lines)
 
     # 增加噪声
     # img_salt = SaltAndPepper(img, 0.3)
@@ -145,20 +146,20 @@ def augment_image(image):
     # cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_gauss.jpg'), img_gauss)
     # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
     #             os.path.join(save_folder, 'labels', image.split('.')[0] + '_gauss.txt'))
-    img_salt = SaltAndPepper(img, 0.5)
-    cv2.imwrite(os.path.join(save_path, image.split('.')[0] + '_salt.jpg'), img_salt)
-    shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
-                os.path.join(save_folder, 'labels', image.split('.')[0] + '_salt.txt'))
-
-    # 变亮、变暗
-    img_darker = darker(img)
-    cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_darker.jpg'), img_darker)
-    shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
-                os.path.join(save_folder, 'labels', image.split('.')[0] + '_darker.txt'))
-    img_brighter = brighter(img)
-    cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_brighter.jpg'), img_brighter)
-    shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
-                os.path.join(save_folder, 'labels', image.split('.')[0] + '_brighter.txt'))
+    # img_salt = SaltAndPepper(img, 0.5)
+    # cv2.imwrite(os.path.join(save_path, image.split('.')[0] + '_salt.jpg'), img_salt)
+    # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
+    #             os.path.join(save_folder, 'labels', image.split('.')[0] + '_salt.txt'))
+    #
+    # # 变亮、变暗
+    # img_darker = darker(img)
+    # cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_darker.jpg'), img_darker)
+    # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
+    #             os.path.join(save_folder, 'labels', image.split('.')[0] + '_darker.txt'))
+    # img_brighter = brighter(img)
+    # cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_brighter.jpg'), img_brighter)
+    # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
+    #             os.path.join(save_folder, 'labels', image.split('.')[0] + '_brighter.txt'))
 
     # blur = cv2.GaussianBlur(img, (7, 7), 1.5)
     # #      cv2.GaussianBlur(图像，卷积核，标准差）

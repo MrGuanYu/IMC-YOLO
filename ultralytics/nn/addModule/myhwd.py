@@ -118,7 +118,7 @@ class myDown_wt(nn.Module):
         y_LH = yH[0][:, :, 1, :]
         y_HH = yH[0][:, :, 2, :]
 
-        yL = yL * self.ca(yL)
+        # yL = yL * self.ca(yL)
         y_HL = y_HL * self.coda(y_HL)
         y_LH = y_LH * self.coda(y_LH)
         y_HH = y_HH * self.coda(y_HH)

@@ -91,7 +91,7 @@ class LSKA(nn.Module):
 class lskaSPPF(nn.Module):
     """Spatial Pyramid Pooling - Fast (SPPF) layer for YOLOv5 by Glenn Jocher."""
 
-    def __init__(self, c1, c2, k=5):
+    def __init__(self, c1, c2, k=11):
         """
         Initializes the SPPF layer with given input/output channels and kernel size.
 
@@ -102,30 +102,14 @@ class lskaSPPF(nn.Module):
         self.cv1 = Conv(c1, c_, 1, 1)
         self.cv2 = Conv(c_ * 4, c2, 1, 1)
         self.m = nn.MaxPool2d(kernel_size=k, stride=1, padding=k // 2)
-        self.lska1 = LSKA(c2, 23)
-        self.lska2 = LSKA(c2, 11)
-        self.lska3 = LSKA(c2, 7)
-        # self.lska4 = LSKA(c_,35)
+        self.lska = LSKA(c_ * 4, k_size=11)
 
     def forward(self, x):
         """Forward pass through Ghost Convolution block."""
         x = self.cv1(x)
-        # x = self.lska1(x)
-
         y1 = self.m(x)
-        # y1 = self.lska2(x)
-
         y2 = self.m(y1)
-        # y2 = self.lska3(x)
-
-        y = self.cv2(torch.cat((x, y1, y2, self.m(y2)), 1))
-
-        y = self.lska1(y)
-        y = self.lska2(y)
-        y = self.lska3(y)
-
-        return y
-
+        return self.cv2(self.lska(torch.cat((x, y1, y2, self.m(y2)), 1)))
 if __name__ == '__main__':
     block = lskaSPPF(64, 64)  # 输入通道数，输出通道数
     input = torch.rand(3, 64, 64, 64)

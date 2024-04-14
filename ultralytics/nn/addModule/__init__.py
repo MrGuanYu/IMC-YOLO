@@ -27,3 +27,9 @@ from .myCBAM import *
 from .gam import *
 from .rephead import *
 from .myhwd import *
+from .dysample import *
+from .hwdsppf import *
+from .fasffhead import *
+from .unireplknetsppf import *
+from .contextdysample import *
+from .carafe import *
