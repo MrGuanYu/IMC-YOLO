@@ -173,6 +173,7 @@ class myChannelAttention(nn.Module):
         # self.avg_pool = nn.AdaptiveAvgPool2d(1)
         # self.max_pool = nn.AdaptiveMaxPool2d(1)
 
+
         self.avg_pool_h = nn.AdaptiveAvgPool2d((None, 1))
         self.max_pool_w = nn.AdaptiveMaxPool2d((1, None))
         self.avg_pool_w = nn.AdaptiveAvgPool2d((1, None))
@@ -278,10 +279,7 @@ class myCBAM(nn.Module):
     def __init__(self, in_planes, ratio=16, kernel_size=7):
         super(myCBAM, self).__init__()
         self.ca = myChannelAttention(in_planes, ratio)
-        # self.sa = SpatialAttention(kernel_size)
         self.ta = TripletAttention(no_spatial=False)
-        # self.hwd = myhwdAttention()
-        # self.ia = ImageSelfAttention(in_planes)
 
     def forward(self, x):
         out = x * self.ca(x)

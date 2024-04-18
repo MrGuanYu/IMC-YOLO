@@ -1,8 +1,4 @@
 import torch
-import torch.nn as nn
-from pytorch_wavelets import DWTForward
-
-import torch
 from torch import nn
 import math
 
@@ -17,7 +13,7 @@ def to_4d(x, h, w):
 
 
 class AKConv(nn.Module):
-    def __init__(self, inc, outc, num_param=3, stride=1, bias=None): # num_param自己制定
+    def __init__(self, inc, outc, num_param, stride=1, bias=None):
         super(AKConv, self).__init__()
         self.num_param = num_param
         self.stride = stride
@@ -153,29 +149,9 @@ class AKConv(nn.Module):
         x_offset = rearrange(x_offset, 'b c h w n -> b c (h n) w')
         return x_offset
 
-
-
-class Down_wt(nn.Module):
-    def __init__(self, in_ch, out_ch):
-        super(Down_wt, self).__init__()
-        self.wt = DWTForward(J=1, mode='zero', wave='haar')
-        self.akconv = AKConv(in_ch * 4,out_ch)
-
-    def forward(self, x):
-        # print(x.shape)
-        yL, yH = self.wt(x)
-        # print(yH[0].size())
-        y_HL = yH[0][:, :, 0, ::]
-        # print(y_HL.shape)
-        y_LH = yH[0][:, :, 1, ::]
-        y_HH = yH[0][:, :, 2, ::]
-        x = torch.cat([yL, y_HL, y_LH, y_HH], dim=1)
-        x = self.akconv(x)
-        return x
-
-# 输入 N C H W,  输出 N C H W
 if __name__ == '__main__':
-    block = Down_wt(64, 128)  # 输入通道数，输出通道数
-    input = torch.rand(3, 64, 64, 64)
+    block = AKConv(inc=32,outc=64,num_param=3)
+    input = torch.rand(64,32,15,15)
     output = block(input)
+    print(input.size())
     print(output.size())

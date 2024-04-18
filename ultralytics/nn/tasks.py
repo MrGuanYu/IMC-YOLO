@@ -934,7 +934,8 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             myDown_wt,
             hwdC2f,
             myhwdSPPF,
-            SPPF_UniRepLK
+            SPPF_UniRepLK,
+            hwdADown
 
             #~~~~~~~~~~~~~~~~~~
         ):
@@ -999,7 +1000,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
         elif m in {LSKA}:
             args = [ch[f], *args]
 
-        elif m in (Down_wt,myDown_wt):
+        elif m in (Down_wt,myDown_wt, hwdADown):
             args = [ch[f], *args]
 
         elif m is LocalWindowAttention:
@@ -1025,9 +1026,6 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
         elif m is Bi_FPN:
             length = len([ch[x] for x in f])
             args = [length]
-
-        elif m is myDown_wt:
-            args = [ch[f], *args]
 
         elif m in {Dy_Sample,ContextGuidedBlock_Down,CARAFE}:
             c2 = ch[f]

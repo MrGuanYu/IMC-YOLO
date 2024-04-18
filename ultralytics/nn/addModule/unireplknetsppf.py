@@ -339,3 +339,10 @@ class SPPF_UniRepLK(nn.Module):
         y1 = self.m(x)
         y2 = self.m(y1)
         return self.cv2(self.UniRepLK(torch.cat((x, y1, y2, self.m(y2)), 1)))
+
+# 输入 N C H W,  输出 N C H W
+if __name__ == '__main__':
+    block = UniRepLKNetBlock(32, 9)  # 输入通道数，输出通道数
+    input = torch.rand(16, 64, 64, 64)
+    output = block(input)
+    print(output.size())
