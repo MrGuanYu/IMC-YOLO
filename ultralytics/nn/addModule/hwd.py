@@ -7,161 +7,95 @@ from torch import nn
 import math
 
 
-from einops.einops import rearrange
 
-def to_3d(x):
-    return rearrange(x, 'b c h w -> b (h w) c')
-
-def to_4d(x, h, w):
-    return rearrange(x, 'b (h w) c -> b c h w', h=h, w=w)
+from ultralytics.nn.modules import Conv
 
 
-class AKConv(nn.Module):
-    def __init__(self, inc, outc, num_param=3, stride=1, bias=None): # num_param自己制定
-        super(AKConv, self).__init__()
-        self.num_param = num_param
-        self.stride = stride
-        self.conv = nn.Sequential(nn.Conv2d(inc, outc, kernel_size=(num_param, 1), stride=(num_param, 1), bias=bias)
-                                  ,nn.BatchNorm2d(outc)
-                                  ,nn.SiLU())  # the conv adds the BN and SiLU to compare original Conv in YOLOv5.
-        self.p_conv = nn.Conv2d(inc, 2 * num_param, kernel_size=3, padding=1, stride=stride)
-        nn.init.constant_(self.p_conv.weight, 0)
-        self.p_conv.register_full_backward_hook(self._set_lr)
+class DCNv2(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1,
+                 padding=1, dilation=1, groups=1, deformable_groups=1):
+        super(DCNv2, self).__init__()
 
-    @staticmethod
-    def _set_lr(module, grad_input, grad_output):
-        grad_input = (grad_input[i] * 0.1 for i in range(len(grad_input)))
-        grad_output = (grad_output[i] * 0.1 for i in range(len(grad_output)))
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = (kernel_size, kernel_size)
+        self.stride = (stride, stride)
+        self.padding = (padding, padding)
+        self.dilation = (dilation, dilation)
+        self.groups = groups
+        self.deformable_groups = deformable_groups
+
+        self.weight = nn.Parameter(
+            torch.empty(out_channels, in_channels, *self.kernel_size)
+        )
+        self.bias = nn.Parameter(torch.empty(out_channels))
+
+        out_channels_offset_mask = (self.deformable_groups * 3 *
+                                    self.kernel_size[0] * self.kernel_size[1])
+        self.conv_offset_mask = nn.Conv2d(
+            self.in_channels,
+            out_channels_offset_mask,
+            kernel_size=self.kernel_size,
+            stride=self.stride,
+            padding=self.padding,
+            bias=True,
+        )
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.act = Conv.default_act
+        self.reset_parameters()
 
     def forward(self, x):
-        # N is num_param.
-        offset = self.p_conv(x)
-        dtype = offset.data.type()
-        N = offset.size(1) // 2
-        # (b, 2N, h, w)
-        p = self._get_p(offset, dtype)
+        offset_mask = self.conv_offset_mask(x)
+        o1, o2, mask = torch.chunk(offset_mask, 3, dim=1)
+        offset = torch.cat((o1, o2), dim=1)
+        mask = torch.sigmoid(mask)
+        x = torch.ops.torchvision.deform_conv2d(
+            x,
+            self.weight,
+            offset,
+            mask,
+            self.bias,
+            self.stride[0], self.stride[1],
+            self.padding[0], self.padding[1],
+            self.dilation[0], self.dilation[1],
+            self.groups,
+            self.deformable_groups,
+            True
+        )
+        x = self.bn(x)
+        x = self.act(x)
+        return x
 
-        # (b, h, w, 2N)
-        p = p.contiguous().permute(0, 2, 3, 1)
-        q_lt = p.detach().floor()
-        q_rb = q_lt + 1
+    def reset_parameters(self):
+        n = self.in_channels
+        for k in self.kernel_size:
+            n *= k
+        std = 1. / math.sqrt(n)
+        self.weight.data.uniform_(-std, std)
+        self.bias.data.zero_()
+        self.conv_offset_mask.weight.data.zero_()
+        self.conv_offset_mask.bias.data.zero_()
 
-        q_lt = torch.cat([torch.clamp(q_lt[..., :N], 0, x.size(2) - 1), torch.clamp(q_lt[..., N:], 0, x.size(3) - 1)],
-                         dim=-1).long()
-        q_rb = torch.cat([torch.clamp(q_rb[..., :N], 0, x.size(2) - 1), torch.clamp(q_rb[..., N:], 0, x.size(3) - 1)],
-                         dim=-1).long()
-        q_lb = torch.cat([q_lt[..., :N], q_rb[..., N:]], dim=-1)
-        q_rt = torch.cat([q_rb[..., :N], q_lt[..., N:]], dim=-1)
-
-        # clip p
-        p = torch.cat([torch.clamp(p[..., :N], 0, x.size(2) - 1), torch.clamp(p[..., N:], 0, x.size(3) - 1)], dim=-1)
-
-        # bilinear kernel (b, h, w, N)
-        g_lt = (1 + (q_lt[..., :N].type_as(p) - p[..., :N])) * (1 + (q_lt[..., N:].type_as(p) - p[..., N:]))
-        g_rb = (1 - (q_rb[..., :N].type_as(p) - p[..., :N])) * (1 - (q_rb[..., N:].type_as(p) - p[..., N:]))
-        g_lb = (1 + (q_lb[..., :N].type_as(p) - p[..., :N])) * (1 - (q_lb[..., N:].type_as(p) - p[..., N:]))
-        g_rt = (1 - (q_rt[..., :N].type_as(p) - p[..., :N])) * (1 + (q_rt[..., N:].type_as(p) - p[..., N:]))
-
-        # resampling the features based on the modified coordinates.
-        x_q_lt = self._get_x_q(x, q_lt, N)
-        x_q_rb = self._get_x_q(x, q_rb, N)
-        x_q_lb = self._get_x_q(x, q_lb, N)
-        x_q_rt = self._get_x_q(x, q_rt, N)
-
-        # bilinear
-        x_offset = g_lt.unsqueeze(dim=1) * x_q_lt + \
-                   g_rb.unsqueeze(dim=1) * x_q_rb + \
-                   g_lb.unsqueeze(dim=1) * x_q_lb + \
-                   g_rt.unsqueeze(dim=1) * x_q_rt
-
-        x_offset = self._reshape_x_offset(x_offset, self.num_param)
-        out = self.conv(x_offset)
-
-        return out
-
-    # generating the inital sampled shapes for the AKConv with different sizes.
-    def _get_p_n(self, N, dtype):
-        base_int = round(math.sqrt(self.num_param))
-        row_number = self.num_param // base_int
-        mod_number = self.num_param % base_int
-        p_n_x ,p_n_y = torch.meshgrid(
-            torch.arange(0, row_number),
-            torch.arange(0 ,base_int))
-        p_n_x = torch.flatten(p_n_x)
-        p_n_y = torch.flatten(p_n_y)
-        if mod_number >  0:
-            mod_p_n_x ,mod_p_n_y = torch.meshgrid(
-                torch.arange(row_number ,row_number +1),
-                torch.arange(0 ,mod_number))
-
-            mod_p_n_x = torch.flatten(mod_p_n_x)
-            mod_p_n_y = torch.flatten(mod_p_n_y)
-            p_n_x ,p_n_y  = torch.cat((p_n_x ,mod_p_n_x)) ,torch.cat((p_n_y ,mod_p_n_y))
-        p_n = torch.cat([p_n_x ,p_n_y], 0)
-        p_n = p_n.view(1, 2 * N, 1, 1).type(dtype)
-        return p_n
-
-    # no zero-padding
-    def _get_p_0(self, h, w, N, dtype):
-        p_0_x, p_0_y = torch.meshgrid(
-            torch.arange(0, h * self.stride, self.stride),
-            torch.arange(0, w * self.stride, self.stride))
-
-        p_0_x = torch.flatten(p_0_x).view(1, 1, h, w).repeat(1, N, 1, 1)
-        p_0_y = torch.flatten(p_0_y).view(1, 1, h, w).repeat(1, N, 1, 1)
-        p_0 = torch.cat([p_0_x, p_0_y], 1).type(dtype)
-
-        return p_0
-
-    def _get_p(self, offset, dtype):
-        N, h, w = offset.size(1) // 2, offset.size(2), offset.size(3)
-
-        # (1, 2N, 1, 1)
-        p_n = self._get_p_n(N, dtype)
-        # (1, 2N, h, w)
-        p_0 = self._get_p_0(h, w, N, dtype)
-        p = p_0 + p_n + offset
-        return p
-
-    def _get_x_q(self, x, q, N):
-        b, h, w, _ = q.size()
-        padded_w = x.size(3)
-        c = x.size(1)
-        # (b, c, h*w)
-        x = x.contiguous().view(b, c, -1)
-
-        # (b, h, w, N)
-        index = q[..., :N] * padded_w + q[..., N:]  # offset_x*w + offset_y
-        # (b, c, h*w*N)
-        index = index.contiguous().unsqueeze(dim=1).expand(-1, c, -1, -1, -1).contiguous().view(b, c, -1)
-
-        x_offset = x.gather(dim=-1, index=index).contiguous().view(b, c, h, w, N)
-
-        return x_offset
-
-
-    #  Stacking resampled features in the row direction.
-    @staticmethod
-    def _reshape_x_offset(x_offset, num_param):
-        b, c, h, w, n = x_offset.size()
-        # using Conv3d
-        # x_offset = x_offset.permute(0,1,4,2,3), then Conv3d(c,c_out, kernel_size =(num_param,1,1),stride=(num_param,1,1),bias= False)
-        # using 1 × 1 Conv
-        # x_offset = x_offset.permute(0,1,4,2,3), then, x_offset.view(b,c×num_param,h,w)  finally, Conv2d(c×num_param,c_out, kernel_size =1,stride=1,bias= False)
-        # using the column conv as follow， then, Conv2d(inc, outc, kernel_size=(num_param, 1), stride=(num_param, 1), bias=bias)
-
-        x_offset = rearrange(x_offset, 'b c h w n -> b c (h n) w')
-        return x_offset
-
-
+class swish(nn.Module):
+    def forward(self, x):
+        return x * torch.sigmoid(x)
 
 class Down_wt(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(Down_wt, self).__init__()
         self.wt = DWTForward(J=1, mode='zero', wave='haar')
-        self.akconv = AKConv(in_ch * 4,out_ch)
+        self.conv_bn_relu = nn.Sequential(
+            nn.Conv2d(in_ch , out_ch, kernel_size=1, stride=1),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True),
+        )
+        self.weight = nn.Parameter(torch.ones(4, dtype=torch.float32), requires_grad=True)
+        self.swish = swish()
+        self.epsilon = 0.0001
 
     def forward(self, x):
+
+        weights = self.weight / (torch.sum(self.swish(self.weight), dim=0) + self.epsilon)  # 权重归一化处理
         # print(x.shape)
         yL, yH = self.wt(x)
         # print(yH[0].size())
@@ -169,9 +103,18 @@ class Down_wt(nn.Module):
         # print(y_HL.shape)
         y_LH = yH[0][:, :, 1, ::]
         y_HH = yH[0][:, :, 2, ::]
-        x = torch.cat([yL, y_HL, y_LH, y_HH], dim=1)
-        x = self.akconv(x)
-        return x
+
+        y = [yL,y_HL,y_LH,y_HH]
+
+        weighted_feature_maps = [weights[i] * y[i] for i in range(4)]
+        # x = torch.cat([yL, y_HL, y_LH, y_HH], dim=1)
+        # x = self.conv_bn_relu(x)
+        stacked_feature_maps = torch.stack(weighted_feature_maps, dim=0)
+        z = torch.sum(stacked_feature_maps, dim=0)
+        result = self.conv_bn_relu(z)
+
+        return result
+
 
 # 输入 N C H W,  输出 N C H W
 if __name__ == '__main__':

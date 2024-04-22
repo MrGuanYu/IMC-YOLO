@@ -35,3 +35,7 @@ from .contextdysample import *
 from .carafe import *
 from .adown import *
 from .akconv import *
+from .iaffc2f import *
+from .tcam import TCAM
+from .dynamicconv import *
+from .myaifi import *

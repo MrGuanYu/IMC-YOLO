@@ -935,7 +935,9 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             hwdC2f,
             myhwdSPPF,
             SPPF_UniRepLK,
-            hwdADown
+            hwdADown,
+            iaffC2f,
+            DynamicConv
 
             #~~~~~~~~~~~~~~~~~~
         ):
@@ -949,7 +951,8 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
                 )  # num heads
 
             args = [c1, c2, *args[1:]]
-            if m in (BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3,C2f_DCNv3_DLKA,hwdcbamC2f,cbamC2f,dcnv3C2f,C2f_iRMB_EMAcbam,emacbamC2f,C2f_myMLCA,mycbamC2f,gamC2f,hwdC2f):
+            if m in (BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3,
+                     C2f_DCNv3_DLKA,hwdcbamC2f,cbamC2f,dcnv3C2f,C2f_iRMB_EMAcbam,emacbamC2f,C2f_myMLCA,mycbamC2f,gamC2f,hwdC2f,iaffC2f):
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is AIFI:
@@ -1030,6 +1033,12 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
         elif m in {Dy_Sample,ContextGuidedBlock_Down,CARAFE}:
             c2 = ch[f]
             args = [c2, *args]
+
+        elif m in {TCAM}:
+            args = [ch[f], *args]
+
+        elif m is myAIFI:
+            args = [ch[f], *args]
 
         #~~~~~~~~~~~~~~~~~~~
 
