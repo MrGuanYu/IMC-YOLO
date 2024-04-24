@@ -85,17 +85,18 @@ class Down_wt(nn.Module):
         super(Down_wt, self).__init__()
         self.wt = DWTForward(J=1, mode='zero', wave='haar')
         self.conv_bn_relu = nn.Sequential(
-            nn.Conv2d(in_ch , out_ch, kernel_size=1, stride=1),
-            nn.BatchNorm2d(out_ch),
+            nn.Conv2d(in_ch * 4, out_ch // 2, kernel_size=1, stride=1),
+            nn.BatchNorm2d(out_ch//2),
             nn.ReLU(inplace=True),
         )
-        self.weight = nn.Parameter(torch.ones(4, dtype=torch.float32), requires_grad=True)
-        self.swish = swish()
-        self.epsilon = 0.0001
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_ch, out_ch // 2, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(out_ch//2),
+            nn.ReLU(inplace=True),
+        )
 
     def forward(self, x):
-
-        weights = self.weight / (torch.sum(self.swish(self.weight), dim=0) + self.epsilon)  # 权重归一化处理
+        z = self.conv(x)
         # print(x.shape)
         yL, yH = self.wt(x)
         # print(yH[0].size())
@@ -103,22 +104,14 @@ class Down_wt(nn.Module):
         # print(y_HL.shape)
         y_LH = yH[0][:, :, 1, ::]
         y_HH = yH[0][:, :, 2, ::]
-
-        y = [yL,y_HL,y_LH,y_HH]
-
-        weighted_feature_maps = [weights[i] * y[i] for i in range(4)]
-        # x = torch.cat([yL, y_HL, y_LH, y_HH], dim=1)
-        # x = self.conv_bn_relu(x)
-        stacked_feature_maps = torch.stack(weighted_feature_maps, dim=0)
-        z = torch.sum(stacked_feature_maps, dim=0)
-        result = self.conv_bn_relu(z)
-
-        return result
-
+        y = torch.cat([yL, y_HL, y_LH, y_HH], dim=1)
+        y = self.conv_bn_relu(y)
+        rlt = torch.cat([z,y], dim=1)
+        return rlt
 
 # 输入 N C H W,  输出 N C H W
 if __name__ == '__main__':
     block = Down_wt(64, 128)  # 输入通道数，输出通道数
-    input = torch.rand(3, 64, 64, 64)
+    input = torch.rand(3, 64, 32, 32)
     output = block(input)
     print(output.size())

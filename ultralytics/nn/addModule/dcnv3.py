@@ -4,11 +4,6 @@ from torch import nn
 import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, constant_
 
-__all__ = ['dcnv3C2f']
-
-from ultralytics.nn.modules import Conv
-from ultralytics.nn.modules.conv import autopad
-
 
 def _get_reference_points(spatial_shapes, device, kernel_h, kernel_w, dilation_h, dilation_w, pad_h=0, pad_w=0,
                           stride_h=1, stride_w=1):
@@ -74,10 +69,6 @@ def dcnv3_core_pytorch(
         group_channels, offset_scale):
     # for debug and test only,
     # need to use cuda version instead
-
-    # input = input.half()
-    # offset = offset.half()
-
     input = F.pad(
         input,
         [0, 0, pad_h, pad_h, pad_w, pad_w])
@@ -103,9 +94,6 @@ def dcnv3_core_pytorch(
     sampling_grid_ = sampling_grids.view(N_, H_out * W_out, group, P_, 2).transpose(1, 2). \
         flatten(0, 1)
     # N_*group, group_channels, H_out*W_out, P_
-
-    # input_ = input_.half()
-
     sampling_input_ = F.grid_sample(
         input_, sampling_grid_, mode='bilinear', padding_mode='zeros', align_corners=False)
 
@@ -228,6 +216,7 @@ class DCNv3_pytorch(nn.Module):
             warnings.warn(
                 "You'd better set channels in DCNv3 to make the dimension of each attention head a power of 2 "
                 "which is more efficient in our CUDA implementation.")
+
         self.offset_scale = offset_scale
         self.channels = channels
         self.kernel_size = kernel_size
@@ -239,6 +228,7 @@ class DCNv3_pytorch(nn.Module):
         self.group_channels = channels // group
         self.offset_scale = offset_scale
         self.center_feature_scale = center_feature_scale
+
         self.dw_conv = nn.Sequential(
             nn.Conv2d(
                 channels,
@@ -262,6 +252,7 @@ class DCNv3_pytorch(nn.Module):
         self.input_proj = nn.Linear(channels, channels)
         self.output_proj = nn.Linear(channels, channels)
         self._reset_parameters()
+
         if center_feature_scale:
             self.center_feature_scale_proj_weight = nn.Parameter(
                 torch.zeros((group, channels), dtype=torch.float))
@@ -286,13 +277,16 @@ class DCNv3_pytorch(nn.Module):
         """
         input = input.permute(0, 2, 3, 1)
         N, H, W, _ = input.shape
+
         x = self.input_proj(input)
         x_proj = x
+
         x1 = input.permute(0, 3, 1, 2)
         x1 = self.dw_conv(x1)
         offset = self.offset(x1)
         mask = self.mask(x1).reshape(N, H, W, self.group, -1)
         mask = F.softmax(mask, -1).reshape(N, H, W, -1)
+
         x = dcnv3_core_pytorch(
             x, offset, mask,
             self.kernel_size, self.kernel_size,
@@ -309,65 +303,27 @@ class DCNv3_pytorch(nn.Module):
                 1, 1, 1, 1, self.channels // self.group).flatten(-2)
             x = x * (1 - center_feature_scale) + x_proj * center_feature_scale
         x = self.output_proj(x).permute(0, 3, 1, 2)
+
         return x
 
 
-
-class dcnv3Bottleneck(nn.Module):
-    """Standard bottleneck."""
-
-    def __init__(self, c1, c2, shortcut=True, g=1, k=(3, 3), e=0.5):
-        """Initializes a bottleneck module with given input/output channels, shortcut option, group, kernels, and
-        expansion.
-        """
-        super().__init__()
-        c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, c_, k[0], 1)
-        self.cv2 = DCNv3_pytorch(c_)
-        # self.cbam = CBAM(c1)
-        self.add = shortcut and c1 == c2
-
-    def forward(self, x):
-        """'forward()' applies the YOLO FPN to input data."""
-        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
+def autopad(k, p=None, d=1):  # kernel, padding, dilation
+    """Pad to 'same' shape outputs."""
+    if d > 1:
+        k = d * (k - 1) + 1 if isinstance(k, int) else [d * (x - 1) + 1 for x in k]  # actual kernel-size
+    if p is None:
+        p = k // 2 if isinstance(k, int) else [x // 2 for x in k]  # auto-pad
+    return p
 
 
-class dcnv3C2f(nn.Module):
-    """Faster Implementation of CSP Bottleneck with 2 convolutions."""
-
-    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
-        """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
-        expansion.
-        """
-        super().__init__()
-        self.c = int(c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, 2 * self.c, 1, 1)
-        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
-        self.m = nn.ModuleList(dcnv3Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3)), e=1.0) for _ in range(n))
-
-    def forward(self, x):
-        """Forward pass through C2f layer."""
-        y = list(self.cv1(x).chunk(2, 1))
-        y.extend(m(y[-1]) for m in self.m)
-        return self.cv2(torch.cat(y, 1))
-
-    def forward_split(self, x):
-        """Forward pass using split() instead of chunk()."""
-        y = list(self.cv1(x).split((self.c, self.c), 1))
-        y.extend(m(y[-1]) for m in self.m)
-        return self.cv2(torch.cat(y, 1))
-
-
-class dcnv3Conv(nn.Module):
+class Conv(nn.Module):
     """Standard convolution with args(ch_in, ch_out, kernel, stride, padding, groups, dilation, activation)."""
-
     default_act = nn.SiLU()  # default activation
 
     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
         """Initialize Conv layer with given arguments including activation."""
         super().__init__()
-        # self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p, d), groups=g, dilation=d, bias=False)
-        self.conv = DCNv3_pytorch(c2)
+        self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p, d), groups=g, dilation=d, bias=False)
         self.bn = nn.BatchNorm2d(c2)
         self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
 
@@ -380,17 +336,49 @@ class dcnv3Conv(nn.Module):
         return self.act(self.conv(x))
 
 
+class Bottleneck(nn.Module):
+    """Standard bottleneck."""
+
+    def __init__(self, c1, c2, shortcut=True, g=1, k=(3, 3), e=0.5):
+        """Initializes a bottleneck module with given input/output channels, shortcut option, group, kernels, and
+        expansion.
+        """
+        super().__init__()
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, c_, k[0], 1)
+        self.cv2 = DCNv3_pytorch(c2)
+        self.add = shortcut and c1 == c2
+
+    def forward(self, x):
+        """'forward()' applies the YOLO FPN to input data."""
+        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
+class C2f_DCNv3(nn.Module):
+    """Faster Implementation of CSP Bottleneck with 2 convolutions."""
 
-# 输入 N C H W,  输出 N C H W
-if __name__ == '__main__':
-    block = DCNv3_pytorch(64)  # 输入通道数，输出通道数
-    input = torch.rand(3, 64, 64, 64)
-    output = block(input)
-    print(output.size())
-    #
-    # input = torch.rand(3, 64, 64, 64)
-    # net = dcnv3Conv(64,64)
-    # x = net(input)
-    # print(x.size())
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
+        """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
+        expansion.
+        """
+        super().__init__()
+        self.c = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, 2 * self.c, 1, 1)
+        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.m = nn.ModuleList(Bottleneck(self.c, self.c, shortcut, g, k=(3, 3), e=1.0) for _ in range(n))
+
+    def forward(self, x):
+        """Forward pass through C2f layer."""
+        x = self.cv1(x)
+        x = x.chunk(2, 1)
+        y = list(x)
+        # y = list(self.cv1(x).chunk(2, 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+    def forward_split(self, x):
+        """Forward pass using split() instead of chunk()."""
+        y = list(self.cv1(x).split((self.c, self.c), 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+

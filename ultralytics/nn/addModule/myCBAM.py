@@ -281,13 +281,14 @@ class mycbamBottleneck(nn.Module):
         self.cv2 = Conv(c_, c2, k[1], 1, g=g)
         self.cbam = myCBAM(c1)
         self.add = shortcut and c1 == c2
-        self.iAFF = iAFF(c2)
+        # self.iAFF = iAFF(c2)
 
     def forward(self, x):
         """'forward()' applies the YOLO FPN to input data."""
         # return x + self.cbam(self.cv2(self.cv1(x))) if self.add else self.cbam(self.cv2(self.cv1(x)))
         if self.add:
-            results = self.iAFF(x, self.cbam(self.cv2(self.cv1(x))))
+            # results = self.iAFF(x, self.cbam(self.cv2(self.cv1(x))))
+            results = x + self.cbam(self.cv2(self.cv1(x)))
         else:
             results = self.cbam(self.cv2(self.cv1(x)))
         return results

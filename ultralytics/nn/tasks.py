@@ -73,7 +73,7 @@ from ultralytics.utils.torch_utils import (
 from .addModule import *
 
 ######################
-from .addModule.dcnv3 import dcnv3Conv, DCNv3_pytorch
+from .addModule.dcnv3 import  DCNv3_pytorch
 
 try:
     import thop
@@ -221,7 +221,7 @@ class BaseModel(nn.Module):
         """
         if not self.is_fused():
             for m in self.model.modules():
-                if isinstance(m, (Conv, Conv2, DWConv,dcnv3Conv,DCNv3_pytorch))and hasattr(m, "bn"):
+                if isinstance(m, (Conv, Conv2, DWConv,DCNv3_pytorch))and hasattr(m, "bn"):
                     if isinstance(m, Conv2):
                         m.fuse_convs()
                     m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
@@ -274,7 +274,7 @@ class BaseModel(nn.Module):
         """
         self = super()._apply(fn)
         m = self.model[-1]  # Detect()
-        if isinstance(m, (Detect, RepHead,Detect_FASFF)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
+        if isinstance(m, (Detect, RepHead,Detect_FASFF,Detect_dyhead, myDetect)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
             m.stride = fn(m.stride)
             m.anchors = fn(m.anchors)
             m.strides = fn(m.strides)
@@ -333,7 +333,7 @@ class DetectionModel(BaseModel):
 
         # Build strides
         m = self.model[-1]  # Detect()
-        if isinstance(m, (Detect,RepHead,Detect_FASFF)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
+        if isinstance(m, (Detect,RepHead,Detect_FASFF,Detect_dyhead, myDetect)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
             s = 256  # 2x min stride
             m.inplace = self.inplace
             forward = lambda x: self.forward(x)[0] if isinstance(m, (Segment, Pose, OBB)) else self.forward(x)
@@ -923,8 +923,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             cbamC2f,
             Down_wt,
             C2f_DCN,
-            dcnv3C2f,
-            dcnv3Conv,
+
             C2f_iRMB_EMAcbam,
             emacbamC2f,
             emaSPPF,
@@ -952,7 +951,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
 
             args = [c1, c2, *args[1:]]
             if m in (BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3,
-                     C2f_DCNv3_DLKA,hwdcbamC2f,cbamC2f,dcnv3C2f,C2f_iRMB_EMAcbam,emacbamC2f,C2f_myMLCA,mycbamC2f,gamC2f,hwdC2f,iaffC2f):
+                     C2f_DCNv3_DLKA,hwdcbamC2f,cbamC2f,C2f_iRMB_EMAcbam,emacbamC2f,C2f_myMLCA,mycbamC2f,gamC2f,hwdC2f,iaffC2f):
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is AIFI:
@@ -969,7 +968,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             args = [ch[f]]
         elif m is Concat:
             c2 = sum(ch[x] for x in f)
-        elif m in (Detect, WorldDetect, Segment, Pose, OBB, ImagePoolingAttn, RepHead,Detect_FASFF):
+        elif m in (Detect, WorldDetect, Segment, Pose, OBB, ImagePoolingAttn, RepHead,Detect_FASFF,Detect_dyhead,myDetect):
             args.append([ch[x] for x in f])
             if m is Segment:
                 args[2] = make_divisible(min(args[2], max_channels) * width, 8)
@@ -1171,7 +1170,7 @@ def guess_model_task(model):
                 return "pose"
             elif isinstance(m, OBB):
                 return "obb"
-            elif isinstance(m, (Detect, WorldDetect, RepHead,Detect_FASFF)):
+            elif isinstance(m, (Detect, WorldDetect, RepHead,Detect_FASFF,Detect_dyhead,myDetect)):
                 return "detect"
 
     # Guess from model filename

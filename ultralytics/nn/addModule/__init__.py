@@ -39,3 +39,5 @@ from .iaffc2f import *
 from .tcam import TCAM
 from .dynamicconv import *
 from .myaifi import *
+from .dynamichead import *
+from .mydetect import myDetect
