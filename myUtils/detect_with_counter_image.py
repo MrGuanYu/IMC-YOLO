@@ -43,7 +43,7 @@ def counter_object_num_image(model, image_path, output_path):
         pixes += 30
 
     # cv2.imwrite(os.path.join(output_path, image_name), annotated_img)
-    cv2.imwrite(os.path.join(output_path, 'v8n' + image_name,), annotated_img)
+    cv2.imwrite(os.path.join(output_path, 'v8n_me6_' + image_name,), annotated_img)
 
     # Display the annotated frame
     cv2.imshow("YOLOv8 Inference", annotated_img)
@@ -51,8 +51,8 @@ def counter_object_num_image(model, image_path, output_path):
 
 if __name__ == '__main__':
     # Load the YOLOv8 model
-    model = YOLO(r'D:\program\python\ultralytics_withV9\runs\detect\yolov8n\weights\best.pt')
-    image_path = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test\images\30_47_0_flip.jpg'
-    output_path = r'D:\program\python\ultralytics_withV9\myRubbish'
+    model = YOLO(r'D:\program\python\ultralytics_withV9\runs\detect\yolov8n-head-tcamb-myaifi6\weights\best.pt')
+    image_path = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test\images\IMG_20240310_145400_bottom_flip.jpg'
+    output_path = r'D:\program\python\ultralytics_withV9\myRubbish\4_27'
 
     counter_object_num_image(model=model, image_path=image_path, output_path=output_path)

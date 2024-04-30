@@ -53,8 +53,8 @@ def draw_boxes(image_path, boxes):
     # 在左上角添加计数器
     draw.text((10, 5), f"Total Holes:{len(boxes)}", fill=(0, 0, 255), font=font)
 
-    tempPath = r'D:\program\python\ultralytics_withV9\myRubbish\train'
-    output_path = os.path.join(r'D:\program\python\ultralytics_withV9\myRubbish\train',image_path.split('\\')[-1])
+    tempPath = r'D:\program\python\ultralytics_withV9\myRubbish\4_27'
+    output_path = os.path.join(r'D:\program\python\ultralytics_withV9\myRubbish\4_27',"truth_" + image_path.split('\\')[-1])
     if not os.path.exists(tempPath):
         os.makedirs(tempPath)
 
@@ -62,18 +62,18 @@ def draw_boxes(image_path, boxes):
 
 if __name__ == '__main__':
 
-    imagePath = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\train\images'
-    labelPath = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\train\labels'
-    labelList = os.listdir(labelPath)
-    for label in labelList:
-        name = label.split('.')[0]
-        annotation_file = os.path.join(labelPath,name + '.txt')
-        image_path = os.path.join(imagePath,name + '.jpg')
-        boxes = parse_yolo_annotation(annotation_file)
-        draw_boxes(image_path, boxes)
+    # imagePath = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\train\images'
+    # labelPath = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\train\labels'
+    # labelList = os.listdir(labelPath)
+    # for label in labelList:
+    #     name = label.split('.')[0]
+    #     annotation_file = os.path.join(labelPath,name + '.txt')
+    #     image_path = os.path.join(imagePath,name + '.jpg')
+    #     boxes = parse_yolo_annotation(annotation_file)
+    #     draw_boxes(image_path, boxes)
 
 
-    # annotation_file = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test\labels\30_47_0_flip.txt'
-    # image_path = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test\images\30_47_0_flip.jpg'
-    # boxes = parse_yolo_annotation(annotation_file)
-    # draw_boxes(image_path,boxes)
+    annotation_file = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test\labels\IMG_20240310_145400_bottom_flip.txt'
+    image_path = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test\images\IMG_20240310_145400_bottom_flip.jpg'
+    boxes = parse_yolo_annotation(annotation_file)
+    draw_boxes(image_path,boxes)
