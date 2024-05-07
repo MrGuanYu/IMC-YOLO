@@ -8,8 +8,8 @@ from pycocotools.cocoeval import COCOeval
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--anno_json', type=str, default=r'D:\program\python\ultralytics_withV9\myRubbish\temp.json', help='training model path')
-    parser.add_argument('--pred_json', type=str, default=r'D:\program\python\ultralytics_withV9\runs\val\exp7\predictions.json')
+    parser.add_argument('--anno_json', type=str, default=r'D:\program\python\ultralytics_withV9\myRubbish\temp1.json', help='training model path')
+    parser.add_argument('--pred_json', type=str, default=r"D:\program\python\ultralytics_withV9\runs\val\exp20\predictions.json")
     return parser.parse_known_args()[0]
 
 

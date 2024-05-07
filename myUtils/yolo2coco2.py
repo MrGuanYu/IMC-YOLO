@@ -8,9 +8,9 @@ import argparse
 classes = ['hole']  # 这里改一下
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--image_path', default=r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\val\images', type=str, help="path of images")  # 图片路径改一下
-parser.add_argument('--label_path', default=r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\val\labels', type=str, help="path of labels .txt")  # 图片标签路径改一下
-parser.add_argument('--save_path', type=str, default=r'D:\program\python\mmdetection\myDatasets\Datasets\700hole\annotations\annotations_val.json',
+parser.add_argument('--image_path', default=r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test\images', type=str, help="path of images")  # 图片路径改一下
+parser.add_argument('--label_path', default=r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test\labels', type=str, help="path of labels .txt")  # 图片标签路径改一下
+parser.add_argument('--save_path', type=str, default=r'D:\program\python\ultralytics_withV9\myRubbish\5_6.json',
                     help="if not split the dataset, give a path to a json file")
 arg = parser.parse_args()
 

@@ -80,23 +80,22 @@ class swish(nn.Module):
     def forward(self, x):
         return x * torch.sigmoid(x)
 
+
 class Down_wt(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(Down_wt, self).__init__()
         self.wt = DWTForward(J=1, mode='zero', wave='haar')
         self.conv_bn_relu = nn.Sequential(
-            nn.Conv2d(in_ch * 4, out_ch // 2, kernel_size=1, stride=1),
-            nn.BatchNorm2d(out_ch//2),
-            nn.ReLU(inplace=True),
-        )
-        self.conv = nn.Sequential(
-            nn.Conv2d(in_ch, out_ch // 2, kernel_size=3, stride=2, padding=1),
-            nn.BatchNorm2d(out_ch//2),
+            nn.Conv2d(in_ch * 4, out_ch, kernel_size=1, stride=1),
+            nn.BatchNorm2d(out_ch),
             nn.ReLU(inplace=True),
         )
 
+        # self.conv1 = nn.Conv2d(in_ch , in_ch, kernel_size=3, stride=2,padding=1)
+
+
     def forward(self, x):
-        z = self.conv(x)
+        # x_d = self.conv1(x)
         # print(x.shape)
         yL, yH = self.wt(x)
         # print(yH[0].size())
@@ -104,10 +103,9 @@ class Down_wt(nn.Module):
         # print(y_HL.shape)
         y_LH = yH[0][:, :, 1, ::]
         y_HH = yH[0][:, :, 2, ::]
-        y = torch.cat([yL, y_HL, y_LH, y_HH], dim=1)
-        y = self.conv_bn_relu(y)
-        rlt = torch.cat([z,y], dim=1)
-        return rlt
+        x = torch.cat([yL, y_HL, y_LH, y_HH], dim=1)
+        # x = self.conv_bn_relu(x)
+        return x
 
 # 输入 N C H W,  输出 N C H W
 if __name__ == '__main__':

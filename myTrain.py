@@ -3,7 +3,7 @@ warnings.filterwarnings('ignore')
 from ultralytics import YOLO, RTDETR
 # unfold 1/2 1/2 hwd 四图拼一图
 if __name__ == '__main__':
-    model = YOLO(r'D:\program\python\ultralytics_withV9\ultralytics\cfg\models\v8\yolov8n-vis.yaml')
+    model = YOLO(r'D:\program\python\ultralytics_withV9\ultralytics\cfg\models\v8\yolov8n-fasterblock.yaml')
     # model = RTDETR(r'D:\program\python\ultralytics_withV9\ultralytics\cfg\models\rt-detr\rtdetr-l.yaml')
     # model.load('yolov8n.pt') # loading pretrain weights
     model.train(task='detect',
@@ -20,10 +20,10 @@ if __name__ == '__main__':
                 amp=False, # close amp
                 # fraction=0.2,
                 # project='runs/train',
-                name='yolov8n-vis',
+                name='yolov8n-fasterblock',
                 pretrained=False,
                 patience=100,
                 lr0=0.001,
-                plots=False,
+                plots=True,
                 # weight_decay=0.0005
                 )
