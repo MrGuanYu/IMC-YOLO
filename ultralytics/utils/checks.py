@@ -155,7 +155,7 @@ def check_imgsz(imgsz, stride=32, min_dim=1, max_dim=2, floor=0):
             "or an integer, i.e. 'yolo export imgsz=640,480' or 'yolo export imgsz=640'"
         )
         if max_dim != 1:
-            raise ValueError(f"imgsz={imgsz} is not a valid image size. {msg}")
+            raise ValueError(f"imgsz={imgsz} is not a val image size. {msg}")
         LOGGER.warning(f"WARNING ⚠️ updating to 'imgsz={max(imgsz)}'. {msg}")
         imgsz = [max(imgsz)]
     # Make image size a multiple of the stride
@@ -466,7 +466,7 @@ def check_yolov5u_filename(file: str, verbose: bool = True):
 
 
 def check_model_file_from_stem(model="yolov8n"):
-    """Return a model filename from a valid model stem."""
+    """Return a model filename from a val model stem."""
     if model and not Path(model).suffix and Path(model).stem in downloads.GITHUB_ASSETS_STEMS:
         return Path(model).with_suffix(".pt")  # add suffix, i.e. yolov8n -> yolov8n.pt
     else:

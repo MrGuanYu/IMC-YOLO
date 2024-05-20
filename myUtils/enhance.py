@@ -104,19 +104,19 @@ def augment_image(image):
     save_path = os.path.join(save_folder, 'images')
 
     img = cv2.imread(os.path.join(image_path, image))
-    # cv2.imwrite(os.path.join(save_path,image),img)
-    # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
-    #             os.path.join(save_folder, 'labels', image.split('.')[0] + '.txt'))
-    #
-    # # cv2.imshow("1",img)
+    cv2.imwrite(os.path.join(save_path,image),img)
+    shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
+                os.path.join(save_folder, 'labels', image.split('.')[0] + '.txt'))
+
+    # cv2.imshow("1",img)
     # cv2.waitKey(5000)
-    # 旋转
+    # # 旋转
     # rotated_90 = rotate(img, 90)
     # cv2.imwrite(save_path + "".join(name) + '_r90.' + extension, rotated_90)
     # rotated_180 = rotate(img, 180)
     # cv2.imwrite(save_path + "".join(name) + '_r180.' + extension, rotated_180)
-    flipped_img = flip(img)
 
+    flipped_img = flip(img)
     cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_flip.jpg'), flipped_img)
     shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
                 os.path.join(save_folder, 'labels', image.split('.')[0] + '_flip.txt'))
@@ -141,25 +141,27 @@ def augment_image(image):
 
     # 增加噪声
     # img_salt = SaltAndPepper(img, 0.3)
-    # cv2.imwrite(save_path + img_name[0:7] + '_salt.jpg', img_salt)
-    # img_gauss = addGaussianNoise(img, 0.5)
-    # cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_gauss.jpg'), img_gauss)
-    # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
-    #             os.path.join(save_folder, 'labels', image.split('.')[0] + '_gauss.txt'))
-    # img_salt = SaltAndPepper(img, 0.5)
-    # cv2.imwrite(os.path.join(save_path, image.split('.')[0] + '_salt.jpg'), img_salt)
-    # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
-    #             os.path.join(save_folder, 'labels', image.split('.')[0] + '_salt.txt'))
-    #
-    # # 变亮、变暗
-    # img_darker = darker(img)
-    # cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_darker.jpg'), img_darker)
-    # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
-    #             os.path.join(save_folder, 'labels', image.split('.')[0] + '_darker.txt'))
-    # img_brighter = brighter(img)
-    # cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_brighter.jpg'), img_brighter)
-    # shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
-    #             os.path.join(save_folder, 'labels', image.split('.')[0] + '_brighter.txt'))
+    # cv2.imwrite(save_path ,image.rsplit('.',1)[0]+ '_salt.jpg', img_salt)
+    img_gauss = addGaussianNoise(img, 0.5)
+    cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_gauss.jpg'), img_gauss)
+    shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
+                os.path.join(save_folder, 'labels', image.split('.')[0] + '_gauss.txt'))
+
+    img_salt = SaltAndPepper(img, 0.5)
+    cv2.imwrite(os.path.join(save_path, image.split('.')[0] + '_salt.jpg'), img_salt)
+    shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
+                os.path.join(save_folder, 'labels', image.split('.')[0] + '_salt.txt'))
+
+    # 变亮、变暗
+    img_darker = darker(img)
+    cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_darker.jpg'), img_darker)
+    shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
+                os.path.join(save_folder, 'labels', image.split('.')[0] + '_darker.txt'))
+
+    img_brighter = brighter(img)
+    cv2.imwrite(os.path.join(save_path, image.split('.')[0]+'_brighter.jpg'), img_brighter)
+    shutil.copy(os.path.join(image_folder, 'labels', image.split('.')[0] + '.txt'),
+                os.path.join(save_folder, 'labels', image.split('.')[0] + '_brighter.txt'))
 
     # blur = cv2.GaussianBlur(img, (7, 7), 1.5)
     # #      cv2.GaussianBlur(图像，卷积核，标准差）

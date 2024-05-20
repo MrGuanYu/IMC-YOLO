@@ -43,12 +43,12 @@ def is_url(url, check=True):
             Defaults to True.
 
     Returns:
-        (bool): Returns True if the string is a valid URL. If 'check' is True, also returns True if the URL exists online.
+        (bool): Returns True if the string is a val URL. If 'check' is True, also returns True if the URL exists online.
             Returns False otherwise.
 
     Example:
         ```python
-        valid = is_url("https://www.example.com")
+        val = is_url("https://www.example.com")
         ```
     """
     with contextlib.suppress(Exception):
@@ -143,7 +143,7 @@ def unzip_file(file, path=None, exclude=(".DS_Store", "__MACOSX"), exist_ok=Fals
         progress (bool, optional): Whether to display a progress bar. Defaults to True.
 
     Raises:
-        BadZipFile: If the provided file does not exist or is not a valid zipfile.
+        BadZipFile: If the provided file does not exist or is not a val zipfile.
 
     Returns:
         (Path): The path to the directory where the zipfile was extracted.

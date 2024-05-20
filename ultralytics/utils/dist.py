@@ -27,7 +27,7 @@ def generate_ddp_file(trainer):
     module, name = f"{trainer.__class__.__module__}.{trainer.__class__.__name__}".rsplit(".", 1)
 
     content = f"""
-# Ultralytics Multi-GPU training temp file (should be automatically deleted after use)
+# Ultralytics Multi-GPU training train file (should be automatically deleted after use)
 overrides = {vars(trainer.args)}
 
 if __name__ == "__main__":
@@ -66,6 +66,6 @@ def generate_ddp_command(world_size, trainer):
 
 
 def ddp_cleanup(trainer, file):
-    """Delete temp file if created."""
+    """Delete train file if created."""
     if f"{id(trainer)}.py" in file:  # if temp_file suffix in file
         os.remove(file)

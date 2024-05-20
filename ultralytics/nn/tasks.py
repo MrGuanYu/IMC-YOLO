@@ -274,7 +274,7 @@ class BaseModel(nn.Module):
         """
         self = super()._apply(fn)
         m = self.model[-1]  # Detect()
-        if isinstance(m, (Detect, RepHead,Detect_FASFF,Detect_dyhead, myDetect)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
+        if isinstance(m, (Detect, RepHead,Detect_FASFF,Detect_dyhead, myDetect,myDetect_FASFF)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
             m.stride = fn(m.stride)
             m.anchors = fn(m.anchors)
             m.strides = fn(m.strides)
@@ -333,7 +333,7 @@ class DetectionModel(BaseModel):
 
         # Build strides
         m = self.model[-1]  # Detect()
-        if isinstance(m, (Detect,RepHead,Detect_FASFF,Detect_dyhead, myDetect)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
+        if isinstance(m, (Detect,RepHead,Detect_FASFF,Detect_dyhead, myDetect,myDetect_FASFF)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
             s = 256  # 2x min stride
             m.inplace = self.inplace
             forward = lambda x: self.forward(x)[0] if isinstance(m, (Segment, Pose, OBB)) else self.forward(x)
@@ -937,7 +937,12 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             hwdADown,
             iaffC2f,
             DynamicConv,
-            C2f_FasterBlock
+            C2f_FasterBlock,
+            myC2f_FasterBlock,
+            ecaC2f_FasterBlock,
+            caC2f_FasterBlock,
+            tpaC2f_FasterBlock,
+            kanC2f_FasterBlock
 
             #~~~~~~~~~~~~~~~~~~
         ):
@@ -952,7 +957,10 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
 
             args = [c1, c2, *args[1:]]
             if m in (BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3,
-                     C2f_DCNv3_DLKA,hwdcbamC2f,cbamC2f,C2f_iRMB_EMAcbam,emacbamC2f,C2f_myMLCA,mycbamC2f,gamC2f,hwdC2f,iaffC2f,C2f_FasterBlock):
+                     C2f_DCNv3_DLKA,hwdcbamC2f,cbamC2f,C2f_iRMB_EMAcbam,emacbamC2f,
+                     C2f_myMLCA,mycbamC2f,gamC2f,hwdC2f,iaffC2f,C2f_FasterBlock,
+                     myC2f_FasterBlock,ecaC2f_FasterBlock,caC2f_FasterBlock,
+                     tpaC2f_FasterBlock,cbamC2f_FasterBlock,kanC2f_FasterBlock):
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is AIFI:
@@ -969,7 +977,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             args = [ch[f]]
         elif m is Concat:
             c2 = sum(ch[x] for x in f)
-        elif m in (Detect, WorldDetect, Segment, Pose, OBB, ImagePoolingAttn, RepHead,Detect_FASFF,Detect_dyhead,myDetect):
+        elif m in (Detect, WorldDetect, Segment, Pose, OBB, ImagePoolingAttn, RepHead,Detect_FASFF,Detect_dyhead,myDetect,myDetect_FASFF):
             args.append([ch[x] for x in f])
             if m is Segment:
                 args[2] = make_divisible(min(args[2], max_channels) * width, 8)
@@ -1171,7 +1179,7 @@ def guess_model_task(model):
                 return "pose"
             elif isinstance(m, OBB):
                 return "obb"
-            elif isinstance(m, (Detect, WorldDetect, RepHead,Detect_FASFF,Detect_dyhead,myDetect)):
+            elif isinstance(m, (Detect, WorldDetect, RepHead,Detect_FASFF,Detect_dyhead,myDetect,myDetect_FASFF)):
                 return "detect"
 
     # Guess from model filename

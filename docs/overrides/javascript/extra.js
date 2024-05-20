@@ -24,7 +24,7 @@ function checkAutoTheme() {
   const langCode = path.split("/")[1];
   // Check if the extracted language code is in the supported languages
   const isValidLangCode = supportedLangCodes.includes(langCode);
-  // Construct the local storage key based on the language code if valid, otherwise default to the root key
+  // Construct the local storage key based on the language code if val, otherwise default to the root key
   const localStorageKey = isValidLangCode ? `/${langCode}/.__palette` : "/.__palette";
   // Retrieve the palette from local storage using the constructed key
   const palette = localStorage.getItem(localStorageKey);

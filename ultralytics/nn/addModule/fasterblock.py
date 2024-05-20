@@ -2,7 +2,11 @@ import torch
 import torch.nn as nn
 from timm.models.layers import DropPath
 
-__all__ = ['C2f_FasterBlock']
+__all__ = ['C2f_FasterBlock','myC2f_FasterBlock','cbamC2f_FasterBlock','tpaC2f_FasterBlock','caC2f_FasterBlock','ecaC2f_FasterBlock']
+
+from ultralytics.nn.addModule import myCBAM, CBAM, TripletAttention
+from ultralytics.nn.addModule.ca import CoordAtt
+from ultralytics.nn.addModule.eca import ECA
 
 
 class Partial_conv3(nn.Module):
@@ -158,13 +162,492 @@ class C2f_FasterBlock(nn.Module):
         return self.cv2(torch.cat(y, 1))
 
 
-if __name__ == "__main__":
-    # Generating Sample image
-    image_size = (1, 64, 240, 240)
-    image = torch.rand(*image_size)
+class myFasterBlock(nn.Module):
 
-    # Model
-    model = C2f_FasterBlock(64, 64)
+    def __init__(self,
+                 inc,
+                 dim,
+                 n_div=4,
+                 mlp_ratio=2,
+                 drop_path=0.1,
+                 layer_scale_init_value=0.0,
+                 act_layer='RELU',
+                 norm_layer='BN',
+                 pconv_fw_type='split_cat'
+                 ):
 
-    out = model(image)
-    print(out.size())
+        super().__init__()
+        self.dim = dim
+        self.inc = inc
+        self.mlp_ratio = mlp_ratio
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.n_div = n_div
+
+        mlp_hidden_dim = int(dim * mlp_ratio)
+
+        mlp_layer = [
+            nn.Conv2d(dim, mlp_hidden_dim, 1, bias=False),
+            nn.BatchNorm2d(mlp_hidden_dim),
+            nn.ReLU(),
+            nn.Conv2d(mlp_hidden_dim, dim, 1, bias=False)
+        ]
+
+        self.mlp = nn.Sequential(*mlp_layer)
+
+        self.spatial_mixing = Partial_conv3(
+            dim,
+            n_div,
+            pconv_fw_type
+        )
+
+        if inc != dim:  # 在输入和输出不等时添加额外处理一步
+            self.firstConv = Conv(inc, dim, 1)
+
+        if layer_scale_init_value > 0:
+            self.layer_scale = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            self.forward = self.forward_layer_scale
+        else:
+            self.forward = self.forward
+
+        self.att = myCBAM(self.dim)
+
+    def forward(self, x):
+        if self.inc != self.dim:
+            x = self.firstConv(x)
+        shortcut = x
+        x = self.spatial_mixing(x)
+        x = shortcut + self.att(self.drop_path(self.mlp(x)))
+        return x
+
+    def forward_layer_scale(self, x):
+        if self.inc != self.dim:
+            x = self.firstConv(x)
+        shortcut = x
+        x = self.spatial_mixing(x)
+        x = shortcut + self.att(self.drop_path(
+            self.layer_scale.unsqueeze(-1).unsqueeze(-1) * self.mlp(x)))
+        return x
+
+
+class myC2f_FasterBlock(nn.Module):
+    """Faster Implementation of CSP Bottleneck with 2 convolutions."""
+
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
+        """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
+        expansion.
+        """
+        super().__init__()
+        self.c = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, 2 * self.c, 1, 1)
+        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.m = nn.ModuleList(myFasterBlock(self.c, self.c) for _ in range(n))
+
+    def forward(self, x):
+        """Forward pass through C2f layer."""
+        x = self.cv1(x)
+        x = x.chunk(2, 1)
+        y = list(x)
+        # y = list(self.cv1(x).chunk(2, 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+    def forward_split(self, x):
+        """Forward pass using split() instead of chunk()."""
+        y = list(self.cv1(x).split((self.c, self.c), 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+
+class tpaFasterBlock(nn.Module):
+
+    def __init__(self,
+                 inc,
+                 dim,
+                 n_div=4,
+                 mlp_ratio=2,
+                 drop_path=0.1,
+                 layer_scale_init_value=0.0,
+                 act_layer='RELU',
+                 norm_layer='BN',
+                 pconv_fw_type='split_cat'
+                 ):
+
+        super().__init__()
+        self.dim = dim
+        self.inc = inc
+        self.mlp_ratio = mlp_ratio
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.n_div = n_div
+
+        mlp_hidden_dim = int(dim * mlp_ratio)
+
+        mlp_layer = [
+            nn.Conv2d(dim, mlp_hidden_dim, 1, bias=False),
+            nn.BatchNorm2d(mlp_hidden_dim),
+            nn.ReLU(),
+            nn.Conv2d(mlp_hidden_dim, dim, 1, bias=False)
+        ]
+
+        self.mlp = nn.Sequential(*mlp_layer)
+
+        self.spatial_mixing = Partial_conv3(
+            dim,
+            n_div,
+            pconv_fw_type
+        )
+
+        if inc != dim:  # 在输入和输出不等时添加额外处理一步
+            self.firstConv = Conv(inc, dim, 1)
+
+        if layer_scale_init_value > 0:
+            self.layer_scale = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            self.forward = self.forward_layer_scale
+        else:
+            self.forward = self.forward
+
+        self.att = TripletAttention()
+
+    def forward(self, x):
+        if self.inc != self.dim:
+            x = self.firstConv(x)
+        shortcut = x
+        x = self.spatial_mixing(x)
+        x = shortcut + self.att(self.drop_path(self.mlp(x)))
+        return x
+
+    def forward_layer_scale(self, x):
+        if self.inc != self.dim:
+            x = self.firstConv(x)
+        shortcut = x
+        x = self.spatial_mixing(x)
+        x = shortcut + self.att(self.drop_path(
+            self.layer_scale.unsqueeze(-1).unsqueeze(-1) * self.mlp(x)))
+        return x
+
+
+class tpaC2f_FasterBlock(nn.Module):
+    """Faster Implementation of CSP Bottleneck with 2 convolutions."""
+
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
+        """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
+        expansion.
+        """
+        super().__init__()
+        self.c = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, 2 * self.c, 1, 1)
+        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.m = nn.ModuleList(tpaFasterBlock(self.c, self.c) for _ in range(n))
+
+    def forward(self, x):
+        """Forward pass through C2f layer."""
+        x = self.cv1(x)
+        x = x.chunk(2, 1)
+        y = list(x)
+        # y = list(self.cv1(x).chunk(2, 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+    def forward_split(self, x):
+        """Forward pass using split() instead of chunk()."""
+        y = list(self.cv1(x).split((self.c, self.c), 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+class caFasterBlock(nn.Module):
+
+    def __init__(self,
+                 inc,
+                 dim,
+                 n_div=4,
+                 mlp_ratio=2,
+                 drop_path=0.1,
+                 layer_scale_init_value=0.0,
+                 act_layer='RELU',
+                 norm_layer='BN',
+                 pconv_fw_type='split_cat'
+                 ):
+
+        super().__init__()
+        self.dim = dim
+        self.inc = inc
+        self.mlp_ratio = mlp_ratio
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.n_div = n_div
+
+        mlp_hidden_dim = int(dim * mlp_ratio)
+
+        mlp_layer = [
+            nn.Conv2d(dim, mlp_hidden_dim, 1, bias=False),
+            nn.BatchNorm2d(mlp_hidden_dim),
+            nn.ReLU(),
+            nn.Conv2d(mlp_hidden_dim, dim, 1, bias=False)
+        ]
+
+        self.mlp = nn.Sequential(*mlp_layer)
+
+        self.spatial_mixing = Partial_conv3(
+            dim,
+            n_div,
+            pconv_fw_type
+        )
+
+        if inc != dim:  # 在输入和输出不等时添加额外处理一步
+            self.firstConv = Conv(inc, dim, 1)
+
+        if layer_scale_init_value > 0:
+            self.layer_scale = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            self.forward = self.forward_layer_scale
+        else:
+            self.forward = self.forward
+
+        self.att = CoordAtt(self.dim)
+
+    def forward(self, x):
+        if self.inc != self.dim:
+            x = self.firstConv(x)
+        shortcut = x
+        x = self.spatial_mixing(x)
+        x = shortcut + self.att(self.drop_path(self.mlp(x)))
+        return x
+
+    def forward_layer_scale(self, x):
+        if self.inc != self.dim:
+            x = self.firstConv(x)
+        shortcut = x
+        x = self.spatial_mixing(x)
+        x = shortcut + self.att(self.drop_path(
+            self.layer_scale.unsqueeze(-1).unsqueeze(-1) * self.mlp(x)))
+        return x
+
+
+class caC2f_FasterBlock(nn.Module):
+    """Faster Implementation of CSP Bottleneck with 2 convolutions."""
+
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
+        """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
+        expansion.
+        """
+        super().__init__()
+        self.c = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, 2 * self.c, 1, 1)
+        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.m = nn.ModuleList(caFasterBlock(self.c, self.c) for _ in range(n))
+
+    def forward(self, x):
+        """Forward pass through C2f layer."""
+        x = self.cv1(x)
+        x = x.chunk(2, 1)
+        y = list(x)
+        # y = list(self.cv1(x).chunk(2, 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+    def forward_split(self, x):
+        """Forward pass using split() instead of chunk()."""
+        y = list(self.cv1(x).split((self.c, self.c), 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+class ecaFasterBlock(nn.Module):
+
+    def __init__(self,
+                 inc,
+                 dim,
+                 n_div=4,
+                 mlp_ratio=2,
+                 drop_path=0.1,
+                 layer_scale_init_value=0.0,
+                 act_layer='RELU',
+                 norm_layer='BN',
+                 pconv_fw_type='split_cat'
+                 ):
+
+        super().__init__()
+        self.dim = dim
+        self.inc = inc
+        self.mlp_ratio = mlp_ratio
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.n_div = n_div
+
+        mlp_hidden_dim = int(dim * mlp_ratio)
+
+        mlp_layer = [
+            nn.Conv2d(dim, mlp_hidden_dim, 1, bias=False),
+            nn.BatchNorm2d(mlp_hidden_dim),
+            nn.ReLU(),
+            nn.Conv2d(mlp_hidden_dim, dim, 1, bias=False)
+        ]
+
+        self.mlp = nn.Sequential(*mlp_layer)
+
+        self.spatial_mixing = Partial_conv3(
+            dim,
+            n_div,
+            pconv_fw_type
+        )
+
+        if inc != dim:  # 在输入和输出不等时添加额外处理一步
+            self.firstConv = Conv(inc, dim, 1)
+
+        if layer_scale_init_value > 0:
+            self.layer_scale = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            self.forward = self.forward_layer_scale
+        else:
+            self.forward = self.forward
+
+        self.att = ECA(self.dim)
+
+    def forward(self, x):
+        if self.inc != self.dim:
+            x = self.firstConv(x)
+        shortcut = x
+        x = self.spatial_mixing(x)
+        x = shortcut + self.att(self.drop_path(self.mlp(x)))
+        return x
+
+    def forward_layer_scale(self, x):
+        if self.inc != self.dim:
+            x = self.firstConv(x)
+        shortcut = x
+        x = self.spatial_mixing(x)
+        x = shortcut + self.att(self.drop_path(
+            self.layer_scale.unsqueeze(-1).unsqueeze(-1) * self.mlp(x)))
+        return x
+
+
+class ecaC2f_FasterBlock(nn.Module):
+    """Faster Implementation of CSP Bottleneck with 2 convolutions."""
+
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
+        """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
+        expansion.
+        """
+        super().__init__()
+        self.c = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, 2 * self.c, 1, 1)
+        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.m = nn.ModuleList(ecaFasterBlock(self.c, self.c) for _ in range(n))
+
+    def forward(self, x):
+        """Forward pass through C2f layer."""
+        x = self.cv1(x)
+        x = x.chunk(2, 1)
+        y = list(x)
+        # y = list(self.cv1(x).chunk(2, 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+    def forward_split(self, x):
+        """Forward pass using split() instead of chunk()."""
+        y = list(self.cv1(x).split((self.c, self.c), 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+
+class cbamFasterBlock(nn.Module):
+
+    def __init__(self,
+                 inc,
+                 dim,
+                 n_div=4,
+                 mlp_ratio=2,
+                 drop_path=0.1,
+                 layer_scale_init_value=0.0,
+                 act_layer='RELU',
+                 norm_layer='BN',
+                 pconv_fw_type='split_cat'
+                 ):
+
+        super().__init__()
+        self.dim = dim
+        self.inc = inc
+        self.mlp_ratio = mlp_ratio
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+        self.n_div = n_div
+
+        mlp_hidden_dim = int(dim * mlp_ratio)
+
+        mlp_layer = [
+            nn.Conv2d(dim, mlp_hidden_dim, 1, bias=False),
+            nn.BatchNorm2d(mlp_hidden_dim),
+            nn.ReLU(),
+            nn.Conv2d(mlp_hidden_dim, dim, 1, bias=False)
+        ]
+
+        self.mlp = nn.Sequential(*mlp_layer)
+
+        self.spatial_mixing = Partial_conv3(
+            dim,
+            n_div,
+            pconv_fw_type
+        )
+
+        if inc != dim:  # 在输入和输出不等时添加额外处理一步
+            self.firstConv = Conv(inc, dim, 1)
+
+        if layer_scale_init_value > 0:
+            self.layer_scale = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            self.forward = self.forward_layer_scale
+        else:
+            self.forward = self.forward
+
+        self.att = CBAM(self.dim)
+
+    def forward(self, x):
+        if self.inc != self.dim:
+            x = self.firstConv(x)
+        shortcut = x
+        x = self.spatial_mixing(x)
+        x = shortcut + self.att(self.drop_path(self.mlp(x)))
+        return x
+
+    def forward_layer_scale(self, x):
+        if self.inc != self.dim:
+            x = self.firstConv(x)
+        shortcut = x
+        x = self.spatial_mixing(x)
+        x = shortcut + self.att(self.drop_path(
+            self.layer_scale.unsqueeze(-1).unsqueeze(-1) * self.mlp(x)))
+        return x
+
+
+class cbamC2f_FasterBlock(nn.Module):
+    """Faster Implementation of CSP Bottleneck with 2 convolutions."""
+
+    def __init__(self, c1, c2, n=1, shortcut=False, g=1, e=0.5):
+        """Initialize CSP bottleneck layer with two convolutions with arguments ch_in, ch_out, number, shortcut, groups,
+        expansion.
+        """
+        super().__init__()
+        self.c = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, 2 * self.c, 1, 1)
+        self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
+        self.m = nn.ModuleList(cbamFasterBlock(self.c, self.c) for _ in range(n))
+
+    def forward(self, x):
+        """Forward pass through C2f layer."""
+        x = self.cv1(x)
+        x = x.chunk(2, 1)
+        y = list(x)
+        # y = list(self.cv1(x).chunk(2, 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+    def forward_split(self, x):
+        """Forward pass using split() instead of chunk()."""
+        y = list(self.cv1(x).split((self.c, self.c), 1))
+        y.extend(m(y[-1]) for m in self.m)
+        return self.cv2(torch.cat(y, 1))
+
+
+
+# if __name__ == "__main__":
+#     # Generating Sample image
+#     image_size = (1, 64, 240, 240)
+#     image = torch.rand(*image_size)
+#
+#     # Model
+#     model = C2f_FasterBlock(64, 64)
+#
+#     out = model(image)
+#     print(out.size())

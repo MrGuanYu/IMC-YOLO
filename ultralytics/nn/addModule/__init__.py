@@ -42,3 +42,4 @@ from .myaifi import *
 from .dynamichead import *
 from .mydetect import myDetect
 from .fasterblock import *
+from .kan import *

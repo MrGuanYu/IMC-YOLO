@@ -120,7 +120,7 @@ def create_yolo_dataset_cfg(output_dir='', label_class=[]):
 
     # 创建文件内容
     data_cfg_file.write('train:  ../train/images\n')
-    data_cfg_file.write("val:    ../valid/images\n")
+    data_cfg_file.write("val:    ../val/images\n")
     data_cfg_file.write("train:   ../train/images\n")
     data_cfg_file.write("\n")
     data_cfg_file.write("# Classes\n")
@@ -144,7 +144,7 @@ def create_yolo_dataset_cfg(output_dir='', label_class=[]):
 def labelme2yolo(input='', output=''):
     outputdir_root = check_output_directory(output)
     if outputdir_root == "":
-        print("No valid output directory, Do Nothing!")
+        print("No val output directory, Do Nothing!")
         return -1
 
     labelme_path = input
@@ -163,7 +163,7 @@ def labelme2yolo(input='', output=''):
 
     # 5. 构建YOLO数据集目录
     train_path = outputdir_root + '/train'
-    valid_path = outputdir_root + '/valid'
+    valid_path = outputdir_root + '/val'
     test_path = outputdir_root + '/train'
 
     # 6. 生成YOLO 训练、验证、测试数据集：图片+标签

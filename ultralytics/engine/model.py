@@ -797,7 +797,7 @@ class Model(nn.Module):
     # def __getattr__(self, attr):
     #    """Raises error if object has no requested attribute."""
     #    name = self.__class__.__name__
-    #    raise AttributeError(f"'{name}' object has no attribute '{attr}'. See valid attributes below.\n{self.__doc__}")
+    #    raise AttributeError(f"'{name}' object has no attribute '{attr}'. See val attributes below.\n{self.__doc__}")
 
     def _smart_load(self, key: str):
         """Load model/trainer/validator/predictor."""

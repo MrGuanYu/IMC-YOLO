@@ -35,7 +35,7 @@ from ultralytics.utils.torch_utils import TORCH_1_9, TORCH_1_13
 MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # train spaces in path
 CFG = "yolov8n.yaml"
 SOURCE = ASSETS / "bus.jpg"
-TMP = (ROOT / "../tests/tmp").resolve()  # temp directory for train files
+TMP = (ROOT / "../tests/tmp").resolve()  # train directory for train files
 IS_TMP_WRITEABLE = is_dir_writeable(TMP)
 
 

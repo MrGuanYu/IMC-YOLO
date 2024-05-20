@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-TMP = Path(__file__).resolve().parent / "tmp"  # temp directory for train files
+TMP = Path(__file__).resolve().parent / "tmp"  # train directory for train files
 
 
 def pytest_addoption(parser):

@@ -29,7 +29,7 @@ from ultralytics.utils import (
     yaml_print,
 )
 
-# Define valid tasks and modes
+# Define val tasks and modes
 MODES = "train", "val", "predict", "export", "track", "benchmark"
 TASKS = "detect", "segment", "classify", "pose", "obb"
 TASK2DATA = {

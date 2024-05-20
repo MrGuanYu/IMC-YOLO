@@ -24,33 +24,13 @@ licenses = {
 categories = [
     {
         "id": 0,
-        "name": 'Eating',
+        "name": 'Shell',
         "supercategory": 'lines',
     },
-    {
-        "id": 1,
-        "name": 'Raising_a_hand',
-        "supercategory": 'lines',
-    },
-    {
-        "id": 2,
-        "name": 'Reading',
-        "supercategory": 'lines',
-    },
-    {
-        "id": 3,
-        "name": 'Sleeping_At_a_desk',
-        "supercategory": 'lines',
-    },
-    {
-        "id": 4,
-        "name": 'Writing',
-        "supercategory": 'lines',
-    }
 
 ]
 
-# 初始化train,test、valid 数据字典
+# 初始化train,test、val 数据字典
 # info licenses categories 在train和test里面都是一致的；
 train_data = {'info': info, 'licenses': licenses, 'categories': categories, 'images': [], 'annotations': []}
 test_data = {'info': info, 'licenses': licenses, 'categories': categories, 'images': [], 'annotations': []}
@@ -94,7 +74,7 @@ def yolo_covert_coco_format(image_path, label_path):
                 info_annotation['area'] = bbox_h * bbox_w  ###area
                 info_annotation['image_id'] = index  # bbox的id
                 info_annotation['id'] = index * 100 + idx  # bbox的id
-                # cv2.imwrite(f"./temp/{info_annotation['id']}.jpg", img_copy)
+                # cv2.imwrite(f"./train/{info_annotation['id']}.jpg", img_copy)
                 info_annotation['segmentation'] = [[xmin, ymin, xmax, ymin, xmax, ymax, xmin, ymax]]  # 四个点的坐标
                 info_annotation['iscrowd'] = 0  # 单例
                 annotations.append(info_annotation)
@@ -141,7 +121,7 @@ def gen_json_file(yolov8_data_path, coco_format_path, key):
 
 
 if __name__ == '__main__':
-    yolov8_data_path = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test'
+    yolov8_data_path = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\ShellNANI\test'
     coco_format_path = r'D:\program\python\ultralytics_withV9\myRubbish'
     # gen_json_file(yolov8_data_path, coco_format_path, key='train')
     # gen_json_file(yolov8_data_path, coco_format_path, key='val')

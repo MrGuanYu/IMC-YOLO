@@ -8,7 +8,7 @@ def counter_object_num_image(model, image_path, output_path):
 
     image = cv2.imread(image_path)
 
-    results = model(image)
+    results = model(image,data=r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\data.yaml')
 
     total_boxes = len(results[0].boxes)
 
@@ -17,11 +17,13 @@ def counter_object_num_image(model, image_path, output_path):
     for i in range(clsNum):
         cls[i] = 0
 
+    # burrow_num = {}
     for v in results[0].boxes.cls:
         for key, value in cls.items():
             if v == key:
                 value += 1
                 cls[key] = value
+
 
     # 选择结果是否包含置信度信息
     annotated_img = results[0].plot(conf=True)
@@ -36,14 +38,14 @@ def counter_object_num_image(model, image_path, output_path):
 
         cv2.putText(annotated_img,
                     # '{} Number:{}'.format(name, str(value))
-                    f"Total Holes:{str(value)}",
+                    f"Total Burrows:{str(value)}",
                     (10, 26),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.8, (255, 0, 0), 2)
         pixes += 30
 
     # cv2.imwrite(os.path.join(output_path, image_name), annotated_img)
-    cv2.imwrite(os.path.join(output_path, 'v8n_me6_' + image_name,), annotated_img)
+    cv2.imwrite(os.path.join(output_path, 'v8n_' + image_name,), annotated_img)
 
     # Display the annotated frame
     cv2.imshow("YOLOv8 Inference", annotated_img)
@@ -51,8 +53,8 @@ def counter_object_num_image(model, image_path, output_path):
 
 if __name__ == '__main__':
     # Load the YOLOv8 model
-    model = YOLO(r'D:\program\python\ultralytics_withV9\runs\detect\yolov8n-head-tcamb-myaifi6\weights\best.pt')
-    image_path = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test\images\IMG_20240310_145400_bottom_flip.jpg'
-    output_path = r'D:\program\python\ultralytics_withV9\myRubbish\4_27'
+    model = YOLO(r'D:\program\python\ultralytics_withV9\runs\detect\yolov8n\weights\best.pt')
+    image_path = r'D:\program\python\ultralytics_withV9\myDatasets\datasets\700hole_enhence_mix\test\images\30_47_0_flip.jpg'
+    output_path = r'D:\program\python\ultralytics_withV9\myRubbish\5_20'
 
     counter_object_num_image(model=model, image_path=image_path, output_path=output_path)

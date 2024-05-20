@@ -12,7 +12,7 @@ from ultralytics.utils.checks import check_requirements
 MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # train spaces in path
 CFG = "yolov8n.yaml"
 SOURCE = ASSETS / "bus.jpg"
-TMP = (ROOT / "../tests/tmp").resolve()  # temp directory for train files
+TMP = (ROOT / "../tests/tmp").resolve()  # train directory for train files
 
 
 @pytest.mark.skipif(not check_requirements("ray", install=False), reason="ray[tune] not installed")
