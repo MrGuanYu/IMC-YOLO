@@ -50,7 +50,6 @@ from ultralytics.nn.modules import (
     CBLinear,
     Silence,
 
-
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, colorstr, emojis, yaml_load
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
@@ -67,13 +66,7 @@ from ultralytics.utils.torch_utils import (
     time_sync,
 )
 
-
-#my add
-######################
 from .addModule import *
-
-######################
-from .addModule.dcnv3 import  DCNv3_pytorch
 
 try:
     import thop
@@ -116,36 +109,7 @@ class BaseModel(nn.Module):
             return self._predict_augment(x)
         return self._predict_once(x, profile, visualize, embed)
 
-    # def _predict_once(self, x, profile=False, visualize=False, embed=None):
-    #     """
-    #     Perform a forward pass through the network.
-    #
-    #     Args:
-    #         x (torch.Tensor): The input tensor to the model.
-    #         profile (bool):  Print the computation time of each layer if True, defaults to False.
-    #         visualize (bool): Save the feature maps of the model if True, defaults to False.
-    #         embed (list, optional): A list of feature vectors/embeddings to return.
-    #
-    #     Returns:
-    #         (torch.Tensor): The last output of the model.
-    #     """
-    #     y, dt, embeddings = [], [], []  # outputs
-    #     for m in self.model:
-    #         if m.f != -1:  # if not from previous layer
-    #             x = y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]  # from earlier layers
-    #         if profile:
-    #             self._profile_one_layer(m, x, dt)
-    #         x = m(x)  # run
-    #         y.append(x if m.i in self.save else None)  # save output
-    #         if visualize:
-    #             feature_visualization(x, m.type, m.i, save_dir=visualize)
-    #         if embed and m.i in embed:
-    #             embeddings.append(nn.functional.adaptive_avg_pool2d(x, (1, 1)).squeeze(-1).squeeze(-1))  # flatten
-    #             if m.i == max(embed):
-    #                 return torch.unbind(torch.cat(embeddings, 1), dim=0)
-    #     return x
-
-    def _predict_once(self, x, profile=False, visualize=False,embed=None):
+    def _predict_once(self, x, profile=False, visualize=False, embed=None):
         """
         Perform a forward pass through the network.
         Args:
@@ -155,22 +119,22 @@ class BaseModel(nn.Module):
         Returns:
             (torch.Tensor): The last output of the model.
         """
-        y, dt = [], []  # outputs
+        y, dt = [], []
         for m in self.model:
-            if m.f != -1:  # if not from previous layer
+            if m.f != -1:
                 x = y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]  # from earlier layers
             if profile:
                 self._profile_one_layer(m, x, dt)
             if hasattr(m, 'backbone'):
                 x = m(x)
-                if len(x) != 5: # 0 - 5
+                if len(x) != 5:
                     x.insert(0, None)
                 for index, i in enumerate(x):
                     if index in self.save:
                         y.append(i)
                     else:
                         y.append(None)
-                x = x[-1] # 最后一个输出传给下一层
+                x = x[-1]
             else:
                 x = m(x)  # run
                 y.append(x if m.i in self.save else None)  # save output
@@ -221,7 +185,7 @@ class BaseModel(nn.Module):
         """
         if not self.is_fused():
             for m in self.model.modules():
-                if isinstance(m, (Conv, Conv2, DWConv,DCNv3_pytorch))and hasattr(m, "bn"):
+                if isinstance(m, (Conv, Conv2, DWConv)) and hasattr(m, "bn"):
                     if isinstance(m, Conv2):
                         m.fuse_convs()
                     m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
@@ -274,7 +238,7 @@ class BaseModel(nn.Module):
         """
         self = super()._apply(fn)
         m = self.model[-1]  # Detect()
-        if isinstance(m, (Detect, RepHead,Detect_FASFF,Detect_dyhead, myDetect,myDetect_FASFF)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
+        if isinstance(m, (Detect, Detect_FASFF)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
             m.stride = fn(m.stride)
             m.anchors = fn(m.anchors)
             m.strides = fn(m.strides)
@@ -333,7 +297,7 @@ class DetectionModel(BaseModel):
 
         # Build strides
         m = self.model[-1]  # Detect()
-        if isinstance(m, (Detect,RepHead,Detect_FASFF,Detect_dyhead, myDetect,myDetect_FASFF)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
+        if isinstance(m, (Detect, Detect_FASFF)):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
             s = 256  # 2x min stride
             m.inplace = self.inplace
             forward = lambda x: self.forward(x)[0] if isinstance(m, (Segment, Pose, OBB)) else self.forward(x)
@@ -377,9 +341,9 @@ class DetectionModel(BaseModel):
     def _clip_augmented(self, y):
         """Clip YOLO augmented inference tails."""
         nl = self.model[-1].nl  # number of detection layers (P3-P5)
-        g = sum(4**x for x in range(nl))  # grid points
+        g = sum(4 ** x for x in range(nl))  # grid points
         e = 1  # exclude layer count
-        i = (y[0].shape[-1] // g) * sum(4**x for x in range(e))  # indices
+        i = (y[0].shape[-1] // g) * sum(4 ** x for x in range(e))  # indices
         y[0] = y[0][..., :-i]  # large
         i = (y[-1].shape[-1] // g) * sum(4 ** (nl - 1 - x) for x in range(e))  # indices
         y[-1] = y[-1][..., i:]  # small
@@ -748,11 +712,11 @@ def torch_safe_load(weight):
     file = attempt_download_asset(weight)  # search online if missing locally
     try:
         with temporary_modules(
-            {
-                "ultralytics.yolo.utils": "ultralytics.utils",
-                "ultralytics.yolo.v8": "ultralytics.models.yolo",
-                "ultralytics.yolo.data": "ultralytics.data",
-            }
+                {
+                    "ultralytics.yolo.utils": "ultralytics.utils",
+                    "ultralytics.yolo.v8": "ultralytics.models.yolo",
+                    "ultralytics.yolo.data": "ultralytics.data",
+                }
         ):  # for legacy 8.0 Classify and Pose models
             ckpt = torch.load(file, map_location="cpu")
 
@@ -881,7 +845,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
 
     for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):  # from, number, module, args
 
-        t=m
+        t = m
 
         m = getattr(torch.nn, m[3:]) if "nn." in m else globals()[m]  # get module
         for j, a in enumerate(args):
@@ -891,60 +855,34 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
 
         n = n_ = max(round(n * depth), 1) if n > 1 else n  # depth gain
         if m in (
-            Classify,
-            Conv,
-            ConvTranspose,
-            GhostConv,
-            Bottleneck,
-            GhostBottleneck,
-            SPP,
-            SPPF,
-            DWConv,
-            Focus,
-            BottleneckCSP,
-            C1,
-            C2,
-            C2f,
-            RepNCSPELAN4,
-            ADown,
-            SPPELAN,
-            C2fAttn,
-            C3,
-            C3TR,
-            C3Ghost,
-            nn.ConvTranspose2d,
-            DWConvTranspose2d,
-            C3x,
-            RepC3,
-            #~~~~~~~~~~~~~~~~~~
-            C2f_DCNv3_DLKA,
-            lskaSPPF,
-            hwdcbamC2f,
-            cbamC2f,
-            Down_wt,
-            C2f_DCN,
+                Classify,
+                Conv,
+                ConvTranspose,
+                GhostConv,
+                Bottleneck,
+                GhostBottleneck,
+                SPP,
+                SPPF,
+                DWConv,
+                Focus,
+                BottleneckCSP,
+                C1,
+                C2,
+                C2f,
+                RepNCSPELAN4,
+                ADown,
+                SPPELAN,
+                C2fAttn,
+                C3,
+                C3TR,
+                C3Ghost,
+                nn.ConvTranspose2d,
+                DWConvTranspose2d,
+                C3x,
+                RepC3,
+                C2f_TBAFN,
 
-            C2f_iRMB_EMAcbam,
-            emacbamC2f,
-            emaSPPF,
-            C2f_myMLCA,
-            mycbamC2f,
-            gamC2f,
-            myDown_wt,
-            hwdC2f,
-            myhwdSPPF,
-            SPPF_UniRepLK,
-            hwdADown,
-            iaffC2f,
-            DynamicConv,
-            C2f_FasterBlock,
-            myC2f_FasterBlock,
-            ecaC2f_FasterBlock,
-            caC2f_FasterBlock,
-            tpaC2f_FasterBlock,
-            kanC2f_FasterBlock
-
-            #~~~~~~~~~~~~~~~~~~
+                # ~~~~~~~~~~~~~~~~~~
         ):
             c1, c2 = ch[f], args[0]
             if c2 != nc:  # if c2 not equal to number of classes (i.e. for Classify() output)
@@ -957,10 +895,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
 
             args = [c1, c2, *args[1:]]
             if m in (BottleneckCSP, C1, C2, C2f, C2fAttn, C3, C3TR, C3Ghost, C3x, RepC3,
-                     C2f_DCNv3_DLKA,hwdcbamC2f,cbamC2f,C2f_iRMB_EMAcbam,emacbamC2f,
-                     C2f_myMLCA,mycbamC2f,gamC2f,hwdC2f,iaffC2f,C2f_FasterBlock,
-                     myC2f_FasterBlock,ecaC2f_FasterBlock,caC2f_FasterBlock,
-                     tpaC2f_FasterBlock,cbamC2f_FasterBlock,kanC2f_FasterBlock):
+                     C2f_TBAFN):
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is AIFI:
@@ -977,7 +912,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             args = [ch[f]]
         elif m is Concat:
             c2 = sum(ch[x] for x in f)
-        elif m in (Detect, WorldDetect, Segment, Pose, OBB, ImagePoolingAttn, RepHead,Detect_FASFF,Detect_dyhead,myDetect,myDetect_FASFF):
+        elif m in (Detect, WorldDetect, Segment, Pose, OBB, ImagePoolingAttn, Detect_FASFF):
             args.append([ch[x] for x in f])
             if m is Segment:
                 args[2] = make_divisible(min(args[2], max_channels) * width, 8)
@@ -991,64 +926,9 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             c2 = ch[f[-1]]
 
 
-        #~~~~~~~~~~~~~~~~~~~
-        elif m in (deformable_LKA_Attention,EMA):
-            c2=ch[f]
-            args=[c2,*args]
-
-        elif m is RCSOSA:
-            c1, c2 = ch[f], args[0]
-            if c2 != nc:  # if c2 not equal to number of classes (i.e. for Classify() output)
-                c2 = make_divisible(min(c2, max_channels) * width, 8)
-            args = [c1, c2, *args[1:]]
-
-        elif m is SDI:
-            args = [[ch[x] for x in f]]
-
-        elif m is DAttentionBaseline:
-            args = [ch[f],*args]
-
-        elif m in {LSKA}:
+        elif m is IAIFI:
             args = [ch[f], *args]
 
-        elif m in (Down_wt,myDown_wt, hwdADown):
-            args = [ch[f], *args]
-
-        elif m is LocalWindowAttention:
-            args = [ch[f], *args]
-
-        elif m is OutlookAttention:
-            args = [ch[f], *args]
-
-        elif m is StokenAttention:
-            args = [ch[f], *args]
-
-        elif m is FocalModulation:
-            args = [ch[f], *args]
-
-        elif m is DCNv3_pytorch:
-            args = [ch[f], *args]
-
-        elif m in (efficientvit_backbone_b0,efficientvit_backbone_b1,efficientvit_backbone_b2,efficientvit_backbone_b3):
-            m = m()
-            c2 = m.width_list
-            backbone = True
-
-        elif m is Bi_FPN:
-            length = len([ch[x] for x in f])
-            args = [length]
-
-        elif m in {Dy_Sample,ContextGuidedBlock_Down,CARAFE}:
-            c2 = ch[f]
-            args = [c2, *args]
-
-        elif m in {TCAM}:
-            args = [ch[f], *args]
-
-        elif m is myAIFI:
-            args = [ch[f], *args]
-
-        #~~~~~~~~~~~~~~~~~~~
 
         else:
             c2 = ch[f]
@@ -1063,19 +943,11 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
         m.np = sum(x.numel() for x in m_.parameters())  # number params
         m_.i, m_.f, m_.type = i + 4 if backbone else i, f, t  # attach index, 'from' index, type
 
-        # m_ = nn.Sequential(*(m(*args) for _ in range(n))) if n > 1 else m(*args)  # module
-        # t = str(m)[8:-2].replace("__main__.", "")  # module type
-        # m.np = sum(x.numel() for x in m_.parameters())  # number params
-        # m_.i, m_.f, m_.type = i, f, t  # attach index, 'from' index, type
         if verbose:
             LOGGER.info(f"{i:>3}{str(f):>20}{n_:>3}{m.np:10.0f}  {t:<45}{str(args):<30}")  # print
-        # save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
-        # layers.append(m_)
-        # if i == 0:
-        #     ch = []
-        # ch.append(c2)
 
-        save.extend(x % (i + 4 if backbone else i) for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
+        save.extend(
+            x % (i + 4 if backbone else i) for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
         layers.append(m_)
         if i == 0:
             ch = []
@@ -1179,7 +1051,7 @@ def guess_model_task(model):
                 return "pose"
             elif isinstance(m, OBB):
                 return "obb"
-            elif isinstance(m, (Detect, WorldDetect, RepHead,Detect_FASFF,Detect_dyhead,myDetect,myDetect_FASFF)):
+            elif isinstance(m, (Detect, WorldDetect, Detect_FASFF)):
                 return "detect"
 
     # Guess from model filename
