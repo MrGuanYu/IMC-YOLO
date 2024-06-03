@@ -3,7 +3,7 @@
 Train a model on a dataset.
 
 Usage:
-    $ yolo mode=train model=yolov8n.pt data=coco128.yaml imgsz=640 epochs=100 batch=16
+    $ yolo mode=train model=IMC-YOLO.pt data=coco128.yaml imgsz=640 epochs=100 batch=16
 """
 
 import math
@@ -125,7 +125,7 @@ class BaseTrainer:
             self.args.workers = 0  # faster CPU training as time dominated by inference, not dataloading
 
         # Model and Dataset
-        self.model = check_model_file_from_stem(self.args.model)  # add suffix, i.e. yolov8n -> yolov8n.pt
+        self.model = check_model_file_from_stem(self.args.model)  # add suffix, i.e. IMC-YOLO -> IMC-YOLO.pt
         try:
             if self.args.task == "classify":
                 self.data = check_cls_dataset(self.args.data)

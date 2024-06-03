@@ -32,8 +32,8 @@ from ultralytics.utils import (
 from ultralytics.utils.downloads import download
 from ultralytics.utils.torch_utils import TORCH_1_9, TORCH_1_13
 
-MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # train spaces in path
-CFG = "yolov8n.yaml"
+MODEL = WEIGHTS_DIR / "path with spaces" / "IMC-YOLO.pt"  # train spaces in path
+CFG = "IMC-YOLO.yaml"
 SOURCE = ASSETS / "bus.jpg"
 TMP = (ROOT / "../tests/tmp").resolve()  # train directory for train files
 IS_TMP_WRITEABLE = is_dir_writeable(TMP)
@@ -87,10 +87,10 @@ def test_predict_txt():
 def test_predict_img():
     """Test YOLO prediction on various types of image sources."""
     model = YOLO(MODEL)
-    seg_model = YOLO(WEIGHTS_DIR / "yolov8n-seg.pt")
-    cls_model = YOLO(WEIGHTS_DIR / "yolov8n-cls.pt")
-    pose_model = YOLO(WEIGHTS_DIR / "yolov8n-pose.pt")
-    obb_model = YOLO(WEIGHTS_DIR / "yolov8n-obb.pt")
+    seg_model = YOLO(WEIGHTS_DIR / "IMC-YOLO-seg.pt")
+    cls_model = YOLO(WEIGHTS_DIR / "IMC-YOLO-cls.pt")
+    pose_model = YOLO(WEIGHTS_DIR / "IMC-YOLO-pose.pt")
+    obb_model = YOLO(WEIGHTS_DIR / "IMC-YOLO-obb.pt")
     im = cv2.imread(str(SOURCE))
     assert len(model(source=Image.open(SOURCE), save=True, verbose=True, imgsz=32)) == 1  # PIL
     assert len(model(source=im, save=True, save_txt=True, imgsz=32)) == 1  # ndarray
@@ -200,7 +200,7 @@ def test_train_scratch():
 
 def test_train_pretrained():
     """Test training the YOLO model from a pre-trained state."""
-    model = YOLO(WEIGHTS_DIR / "yolov8n-seg.pt")
+    model = YOLO(WEIGHTS_DIR / "IMC-YOLO-seg.pt")
     model.train(data="coco8-seg.yaml", epochs=1, imgsz=32, cache="ram", copy_paste=0.5, mixup=0.5, name=0)
     model(SOURCE)
 
@@ -321,7 +321,7 @@ def test_predict_callback_and_setup():
 
 def test_results():
     """Test various result formats for the YOLO model."""
-    for m in "yolov8n-pose.pt", "yolov8n-seg.pt", "yolov8n.pt", "yolov8n-cls.pt":
+    for m in "IMC-YOLO-pose.pt", "IMC-YOLO-seg.pt", "IMC-YOLO.pt", "IMC-YOLO-cls.pt":
         results = YOLO(WEIGHTS_DIR / m)([SOURCE, SOURCE], imgsz=160)
         for r in results:
             r = r.cpu().numpy()
@@ -371,7 +371,7 @@ def test_data_annotator():
 
     auto_annotate(
         ASSETS,
-        det_model=WEIGHTS_DIR / "yolov8n.pt",
+        det_model=WEIGHTS_DIR / "IMC-YOLO.pt",
         sam_model=WEIGHTS_DIR / "mobile_sam.pt",
         output_dir=TMP / "auto_annotate_labels",
     )
@@ -425,7 +425,7 @@ def test_utils_benchmarks():
     """Test model benchmarking."""
     from ultralytics.utils.benchmarks import ProfileModels
 
-    ProfileModels(["yolov8n.yaml"], imgsz=32, min_time=1, num_timed_runs=3, num_warmup_runs=1).profile()
+    ProfileModels(["IMC-YOLO.yaml"], imgsz=32, min_time=1, num_timed_runs=3, num_warmup_runs=1).profile()
 
 
 def test_utils_torchutils():
@@ -602,14 +602,14 @@ def test_classify_transforms_train(image, auto_augment, erasing, force_color_jit
 @pytest.mark.skipif(not ONLINE, reason="environment is offline")
 def test_model_tune():
     """Tune YOLO model for performance."""
-    YOLO("yolov8n-pose.pt").tune(data="coco8-pose.yaml", plots=False, imgsz=32, epochs=1, iterations=2, device="cpu")
-    YOLO("yolov8n-cls.pt").tune(data="imagenet10", plots=False, imgsz=32, epochs=1, iterations=2, device="cpu")
+    YOLO("IMC-YOLO-pose.pt").tune(data="coco8-pose.yaml", plots=False, imgsz=32, epochs=1, iterations=2, device="cpu")
+    YOLO("IMC-YOLO-cls.pt").tune(data="imagenet10", plots=False, imgsz=32, epochs=1, iterations=2, device="cpu")
 
 
 def test_model_embeddings():
     """Test YOLO model embeddings."""
     model_detect = YOLO(MODEL)
-    model_segment = YOLO(WEIGHTS_DIR / "yolov8n-seg.pt")
+    model_segment = YOLO(WEIGHTS_DIR / "IMC-YOLO-seg.pt")
 
     for batch in [SOURCE], [SOURCE, SOURCE]:  # train batch size 1 and 2
         assert len(model_detect.embed(source=batch, imgsz=32)) == len(batch)

@@ -9,18 +9,18 @@ from ultralytics.utils import ASSETS, WEIGHTS_DIR, checks
 CUDA_IS_AVAILABLE = checks.cuda_is_available()
 CUDA_DEVICE_COUNT = checks.cuda_device_count()
 TASK_ARGS = [
-    ("detect", "yolov8n", "coco8.yaml"),
-    ("segment", "yolov8n-seg", "coco8-seg.yaml"),
-    ("classify", "yolov8n-cls", "imagenet10"),
-    ("pose", "yolov8n-pose", "coco8-pose.yaml"),
-    ("obb", "yolov8n-obb", "dota8.yaml"),
+    ("detect", "IMC-YOLO", "coco8.yaml"),
+    ("segment", "IMC-YOLO-seg", "coco8-seg.yaml"),
+    ("classify", "IMC-YOLO-cls", "imagenet10"),
+    ("pose", "IMC-YOLO-pose", "coco8-pose.yaml"),
+    ("obb", "IMC-YOLO-obb", "dota8.yaml"),
 ]  # (task, model, data)
 EXPORT_ARGS = [
-    ("yolov8n", "torchscript"),
-    ("yolov8n-seg", "torchscript"),
-    ("yolov8n-cls", "torchscript"),
-    ("yolov8n-pose", "torchscript"),
-    ("yolov8n-obb", "torchscript"),
+    ("IMC-YOLO", "torchscript"),
+    ("IMC-YOLO-seg", "torchscript"),
+    ("IMC-YOLO-cls", "torchscript"),
+    ("IMC-YOLO-pose", "torchscript"),
+    ("IMC-YOLO-obb", "torchscript"),
 ]  # (model, format)
 
 
@@ -62,7 +62,7 @@ def test_export(model, format):
     run(f"yolo export model={WEIGHTS_DIR / model}.pt format={format} imgsz=32")
 
 
-def test_rtdetr(task="detect", model="yolov8n-rtdetr.yaml", data="coco8.yaml"):
+def test_rtdetr(task="detect", model="IMC-YOLO-rtdetr.yaml", data="coco8.yaml"):
     """Test the RTDETR functionality with the Ultralytics framework."""
     # Warning: MUST use imgsz=640
     run(f"yolo train {task} model={model} data={data} --imgsz= 160 epochs =1, cache = disk")  # add coma, spaces to args

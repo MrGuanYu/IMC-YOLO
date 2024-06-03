@@ -9,8 +9,8 @@ from ultralytics import YOLO, download
 from ultralytics.utils import ASSETS, DATASETS_DIR, ROOT, SETTINGS, WEIGHTS_DIR
 from ultralytics.utils.checks import check_requirements
 
-MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # train spaces in path
-CFG = "yolov8n.yaml"
+MODEL = WEIGHTS_DIR / "path with spaces" / "IMC-YOLO.pt"  # train spaces in path
+CFG = "IMC-YOLO.yaml"
 SOURCE = ASSETS / "bus.jpg"
 TMP = (ROOT / "../tests/tmp").resolve()  # train directory for train files
 
@@ -18,7 +18,7 @@ TMP = (ROOT / "../tests/tmp").resolve()  # train directory for train files
 @pytest.mark.skipif(not check_requirements("ray", install=False), reason="ray[tune] not installed")
 def test_model_ray_tune():
     """Tune YOLO model with Ray optimization library."""
-    YOLO("yolov8n-cls.yaml").tune(
+    YOLO("IMC-YOLO-cls.yaml").tune(
         use_ray=True, data="imagenet10", grace_period=1, iterations=1, imgsz=32, epochs=1, plots=False, device="cpu"
     )
 
@@ -27,7 +27,7 @@ def test_model_ray_tune():
 def test_mlflow():
     """Test training with MLflow tracking enabled."""
     SETTINGS["mlflow"] = True
-    YOLO("yolov8n-cls.yaml").train(data="imagenet10", imgsz=32, epochs=3, plots=False, device="cpu")
+    YOLO("IMC-YOLO-cls.yaml").train(data="imagenet10", imgsz=32, epochs=3, plots=False, device="cpu")
 
 @pytest.mark.skipif(not check_requirements('mlflow', install=False), reason='mlflow not installed')
 def test_mlflow_keep_run_active():
@@ -40,7 +40,7 @@ def test_mlflow_keep_run_active():
 
     # Test with MLFLOW_KEEP_RUN_ACTIVE=True
     os.environ['MLFLOW_KEEP_RUN_ACTIVE'] = 'True'
-    YOLO('yolov8n-cls.yaml').train(data='imagenet10', imgsz=32, epochs=1, plots=False, device='cpu')
+    YOLO('IMC-YOLO-cls.yaml').train(data='imagenet10', imgsz=32, epochs=1, plots=False, device='cpu')
     status = mlflow.active_run().info.status
     assert status == 'RUNNING', "MLflow run should be active when MLFLOW_KEEP_RUN_ACTIVE=True"
 
@@ -48,13 +48,13 @@ def test_mlflow_keep_run_active():
 
     # Test with MLFLOW_KEEP_RUN_ACTIVE=False
     os.environ['MLFLOW_KEEP_RUN_ACTIVE'] = 'False'
-    YOLO('yolov8n-cls.yaml').train(data='imagenet10', imgsz=32, epochs=1, plots=False, device='cpu')
+    YOLO('IMC-YOLO-cls.yaml').train(data='imagenet10', imgsz=32, epochs=1, plots=False, device='cpu')
     status = mlflow.get_run(run_id=run_id).info.status
     assert status == 'FINISHED', "MLflow run should be ended when MLFLOW_KEEP_RUN_ACTIVE=False"
 
     # Test with MLFLOW_KEEP_RUN_ACTIVE not set
     os.environ.pop('MLFLOW_KEEP_RUN_ACTIVE', None)
-    YOLO('yolov8n-cls.yaml').train(data='imagenet10', imgsz=32, epochs=1, plots=False, device='cpu')
+    YOLO('IMC-YOLO-cls.yaml').train(data='imagenet10', imgsz=32, epochs=1, plots=False, device='cpu')
     status = mlflow.get_run(run_id=run_id).info.status
     assert status == 'FINISHED', "MLflow run should be ended by default when MLFLOW_KEEP_RUN_ACTIVE is not set"
 
@@ -123,21 +123,21 @@ def test_pycocotools():
     # Download annotations after each dataset downloads first
     url = "https://github.com/ultralytics/assets/releases/download/v8.1.0/"
 
-    args = {"model": "yolov8n.pt", "data": "coco8.yaml", "save_json": True, "imgsz": 64}
+    args = {"model": "IMC-YOLO.pt", "data": "coco8.yaml", "save_json": True, "imgsz": 64}
     validator = DetectionValidator(args=args)
     validator()
     validator.is_coco = True
     download(f"{url}instances_val2017.json", dir=DATASETS_DIR / "coco8/annotations")
     _ = validator.eval_json(validator.stats)
 
-    args = {"model": "yolov8n-seg.pt", "data": "coco8-seg.yaml", "save_json": True, "imgsz": 64}
+    args = {"model": "IMC-YOLO-seg.pt", "data": "coco8-seg.yaml", "save_json": True, "imgsz": 64}
     validator = SegmentationValidator(args=args)
     validator()
     validator.is_coco = True
     download(f"{url}instances_val2017.json", dir=DATASETS_DIR / "coco8-seg/annotations")
     _ = validator.eval_json(validator.stats)
 
-    args = {"model": "yolov8n-pose.pt", "data": "coco8-pose.yaml", "save_json": True, "imgsz": 64}
+    args = {"model": "IMC-YOLO-pose.pt", "data": "coco8-pose.yaml", "save_json": True, "imgsz": 64}
     validator = PoseValidator(args=args)
     validator()
     validator.is_coco = True

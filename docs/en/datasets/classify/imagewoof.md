@@ -63,7 +63,7 @@ To use these variants in your training, simply replace 'imagewoof' in the datase
 from ultralytics import YOLO
 
 # Load a model
-model = YOLO('yolov8n-cls.pt')  # load a pretrained model (recommended for training)
+model = YOLO('IMC-YOLO-cls.pt')  # load a pretrained model (recommended for training)
 
 # For medium-sized dataset
 model.train(data='imagewoof320', epochs=100, imgsz=224)

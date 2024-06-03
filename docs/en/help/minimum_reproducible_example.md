@@ -53,7 +53,7 @@ import torch
 from ultralytics import YOLO
 
 # Load the model
-model = YOLO("yolov8n.pt")
+model = YOLO("IMC-YOLO.pt")
 
 # Load a 0-channel image
 image = torch.rand(1, 0, 640, 640)

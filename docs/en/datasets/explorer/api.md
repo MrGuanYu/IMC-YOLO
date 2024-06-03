@@ -36,7 +36,7 @@ pip install ultralytics[explorer]
 from ultralytics import Explorer
 
 # Create an Explorer object
-explorer = Explorer(data='coco128.yaml', model='yolov8n.pt')
+explorer = Explorer(data='coco128.yaml', model='IMC-YOLO.pt')
 
 # Create embeddings for your dataset
 explorer.create_embeddings_table()

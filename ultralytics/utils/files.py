@@ -147,12 +147,12 @@ def get_latest_run(search_dir="."):
     return max(last_list, key=os.path.getctime) if last_list else ""
 
 
-def update_models(model_names=("yolov8n.pt",), source_dir=Path("."), update_names=False):
+def update_models(model_names=("IMC-YOLO.pt",), source_dir=Path("."), update_names=False):
     """
     Updates and re-saves specified YOLO models in an 'updated_models' subdirectory.
 
     Args:
-        model_names (tuple, optional): Model filenames to update, defaults to ("yolov8n.pt").
+        model_names (tuple, optional): Model filenames to update, defaults to ("IMC-YOLO.pt").
         source_dir (Path, optional): Directory containing models and target subdirectory, defaults to current directory.
         update_names (bool, optional): Update model names from a data YAML.
 

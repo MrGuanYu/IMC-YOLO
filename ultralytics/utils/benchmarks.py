@@ -4,20 +4,20 @@ Benchmark a YOLO model formats for speed and accuracy.
 
 Usage:
     from ultralytics.utils.benchmarks import ProfileModels, benchmark
-    ProfileModels(['yolov8n.yaml', 'yolov8s.yaml']).profile()
-    benchmark(model='yolov8n.pt', imgsz=160)
+    ProfileModels(['IMC-YOLO.yaml', 'yolov8s.yaml']).profile()
+    benchmark(model='IMC-YOLO.pt', imgsz=160)
 
 Format                  | `format=argument`         | Model
 ---                     | ---                       | ---
-PyTorch                 | -                         | yolov8n.pt
-TorchScript             | `torchscript`             | yolov8n.torchscript
-ONNX                    | `onnx`                    | yolov8n.onnx
+PyTorch                 | -                         | IMC-YOLO.pt
+TorchScript             | `torchscript`             | IMC-YOLO.torchscript
+ONNX                    | `onnx`                    | IMC-YOLO.onnx
 OpenVINO                | `openvino`                | yolov8n_openvino_model/
-TensorRT                | `engine`                  | yolov8n.engine
-CoreML                  | `coreml`                  | yolov8n.mlpackage
+TensorRT                | `engine`                  | IMC-YOLO.engine
+CoreML                  | `coreml`                  | IMC-YOLO.mlpackage
 TensorFlow SavedModel   | `saved_model`             | yolov8n_saved_model/
-TensorFlow GraphDef     | `pb`                      | yolov8n.pb
-TensorFlow Lite         | `tflite`                  | yolov8n.tflite
+TensorFlow GraphDef     | `pb`                      | IMC-YOLO.pb
+TensorFlow Lite         | `tflite`                  | IMC-YOLO.tflite
 TensorFlow Edge TPU     | `edgetpu`                 | yolov8n_edgetpu.tflite
 TensorFlow.js           | `tfjs`                    | yolov8n_web_model/
 PaddlePaddle            | `paddle`                  | yolov8n_paddle_model/
@@ -42,14 +42,14 @@ from ultralytics.utils.torch_utils import select_device
 
 
 def benchmark(
-    model=WEIGHTS_DIR / "yolov8n.pt", data=None, imgsz=160, half=False, int8=False, device="cpu", verbose=False
+    model=WEIGHTS_DIR / "IMC-YOLO.pt", data=None, imgsz=160, half=False, int8=False, device="cpu", verbose=False
 ):
     """
     Benchmark a YOLO model across different formats for speed and accuracy.
 
     Args:
         model (str | Path | optional): Path to the model file or directory. Default is
-            Path(SETTINGS['weights_dir']) / 'yolov8n.pt'.
+            Path(SETTINGS['weights_dir']) / 'IMC-YOLO.pt'.
         data (str, optional): Dataset to evaluate on, inherited from TASK2DATA if not passed. Default is None.
         imgsz (int, optional): Image size for the benchmark. Default is 160.
         half (bool, optional): Use half-precision for the model if True. Default is False.
@@ -66,7 +66,7 @@ def benchmark(
         ```python
         from ultralytics.utils.benchmarks import benchmark
 
-        benchmark(model='yolov8n.pt', imgsz=640)
+        benchmark(model='IMC-YOLO.pt', imgsz=640)
         ```
     """
 
@@ -171,7 +171,7 @@ class ProfileModels:
         ```python
         from ultralytics.utils.benchmarks import ProfileModels
 
-        ProfileModels(['yolov8n.yaml', 'yolov8s.yaml'], imgsz=640).profile()
+        ProfileModels(['IMC-YOLO.yaml', 'yolov8s.yaml'], imgsz=640).profile()
         ```
     """
 

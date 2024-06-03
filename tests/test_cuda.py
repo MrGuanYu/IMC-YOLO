@@ -9,7 +9,7 @@ from ultralytics.utils import ASSETS, WEIGHTS_DIR, checks
 CUDA_IS_AVAILABLE = checks.cuda_is_available()
 CUDA_DEVICE_COUNT = checks.cuda_device_count()
 
-MODEL = WEIGHTS_DIR / "path with spaces" / "yolov8n.pt"  # train spaces in path
+MODEL = WEIGHTS_DIR / "path with spaces" / "IMC-YOLO.pt"  # train spaces in path
 DATA = "coco8.yaml"
 BUS = ASSETS / "bus.jpg"
 
@@ -31,7 +31,7 @@ def test_train():
 @pytest.mark.skipif(not CUDA_IS_AVAILABLE, reason="CUDA is not available")
 def test_predict_multiple_devices():
     """Validate model prediction on multiple devices."""
-    model = YOLO("yolov8n.pt")
+    model = YOLO("IMC-YOLO.pt")
     model = model.cpu()
     assert str(model.device) == "cpu"
     _ = model(BUS)  # CPU inference

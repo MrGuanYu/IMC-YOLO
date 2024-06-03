@@ -231,7 +231,7 @@ class Results(SimpleClass):
             from PIL import Image
             from ultralytics import YOLO
 
-            model = YOLO('yolov8n.pt')
+            model = YOLO('IMC-YOLO.pt')
             results = model('bus.jpg')  # results list
             for r in results:
                 im_array = r.plot()  # plot a BGR numpy array of predictions

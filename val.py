@@ -1,23 +1,18 @@
 import warnings
 warnings.filterwarnings('ignore')
+
 from ultralytics import YOLO
 
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
-# 这里～～～～～～～～～ ：（
+
 if __name__ == '__main__':
-    model = YOLO(r'D:\program\python\ultralytics_withV9\runs\detect\yolov8n2\weights\best.pt')
-    metrics = model.val(data=r'D:\program\python\ultralytics_withV9\myDatasets\datasets\ShellNANI\data.yaml',
-              split = 'test',
-              cache=False,
-              # rect=False,
-              save_json=True, # if you need to cal coco metrice
-              project='runs/val',
-              name='exp',
-              plots=True
-              )
-
-    rlt = metrics.box.map75  # map75
-    print(rlt)
-
-
+    model = YOLO(r'D:\program\python\IMC-YOLO\runs\yolov8n\weights\best.pt')
+    metrics = model.val(data=r'D:\program\python\IMC-YOLO\dataset\razor_clam_burrows\data.yaml',
+                        split='test',
+                        cache=False,
+                        save_json=True,  # if you need to cal coco metrice
+                        project='runs/val',
+                        name='exp',
+                        plots=True
+                        )

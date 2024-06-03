@@ -36,17 +36,17 @@ def init_explorer_form():
     datasets = ROOT / "cfg" / "datasets"
     ds = [d.name for d in datasets.glob("*.yaml")]
     models = [
-        "yolov8n.pt",
+        "IMC-YOLO.pt",
         "yolov8s.pt",
         "yolov8m.pt",
         "yolov8l.pt",
         "yolov8x.pt",
-        "yolov8n-seg.pt",
+        "IMC-YOLO-seg.pt",
         "yolov8s-seg.pt",
         "yolov8m-seg.pt",
         "yolov8l-seg.pt",
         "yolov8x-seg.pt",
-        "yolov8n-pose.pt",
+        "IMC-YOLO-pose.pt",
         "yolov8s-pose.pt",
         "yolov8m-pose.pt",
         "yolov8l-pose.pt",

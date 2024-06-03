@@ -11,7 +11,7 @@ To get started, simply browse through the models in this directory and find one 
 Model `*.yaml` files may be used directly in the Command Line Interface (CLI) with a `yolo` command:
 
 ```bash
-yolo task=detect mode=train model=yolov8n.yaml data=coco128.yaml epochs=100
+yolo task=detect mode=train model=IMC-YOLO.yaml data=coco128.yaml epochs=100
 ```
 
 They may also be used directly in a Python environment, and accepts the same [arguments](https://docs.ultralytics.com/usage/cfg/) as in the CLI example above:

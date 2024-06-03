@@ -49,7 +49,7 @@ import gradio as gr
 
 from ultralytics import ASSETS, YOLO
 
-model = YOLO("yolov8n.pt")
+model = YOLO("IMC-YOLO.pt")
 
 
 def predict_image(img, conf_threshold, iou_threshold):

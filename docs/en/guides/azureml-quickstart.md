@@ -68,13 +68,13 @@ pip install onnx>=1.12.0
 Predict:
 
 ```bash
-yolo predict model=yolov8n.pt source='https://ultralytics.com/images/bus.jpg'
+yolo predict model=IMC-YOLO.pt source='https://ultralytics.com/images/bus.jpg'
 ```
 
 Train a detection model for 10 epochs with an initial learning_rate of 0.01:
 
 ```bash
-yolo train data=coco128.yaml model=yolov8n.pt epochs=10 lr0=0.01
+yolo train data=coco128.yaml model=IMC-YOLO.pt epochs=10 lr0=0.01
 ```
 
 You can find more [instructions to use the Ultralytics CLI here](../quickstart.md#use-ultralytics-with-cli).
@@ -119,7 +119,7 @@ Run some predictions using the [Ultralytics CLI](../quickstart.md#use-ultralytic
 ```bash
 %%bash
 source activate yolov8env
-yolo predict model=yolov8n.pt source='https://ultralytics.com/images/bus.jpg'
+yolo predict model=IMC-YOLO.pt source='https://ultralytics.com/images/bus.jpg'
 ```
 
 Or with the [Ultralytics Python interface](../quickstart.md#use-ultralytics-with-python), for example to train the model:
@@ -128,7 +128,7 @@ Or with the [Ultralytics Python interface](../quickstart.md#use-ultralytics-with
 from ultralytics import YOLO
 
 # Load a model
-model = YOLO("yolov8n.pt")  # load an official YOLOv8n model
+model = YOLO("IMC-YOLO.pt")  # load an official YOLOv8n model
 
 # Use the model
 model.train(data="coco128.yaml", epochs=3)  # train the model

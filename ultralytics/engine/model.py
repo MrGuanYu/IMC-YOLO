@@ -25,7 +25,7 @@ class Model(nn.Module):
 
     Args:
         model (Union[str, Path], optional): Path or name of the model to load or create. This can be a local file
-            path, a model name from Ultralytics HUB, or a Triton Server model. Defaults to 'yolov8n.pt'.
+            path, a model name from Ultralytics HUB, or a Triton Server model. Defaults to 'IMC-YOLO.pt'.
         task (Any, optional): The task type associated with the YOLO model. This can be used to specify the model's
             application domain, such as object detection, segmentation, etc. Defaults to None.
         verbose (bool, optional): If True, enables verbose output during the model's operations. Defaults to False.
@@ -83,7 +83,7 @@ class Model(nn.Module):
 
     def __init__(
         self,
-        model: Union[str, Path] = "yolov8n.pt",
+        model: Union[str, Path] = "IMC-YOLO.pt",
         task: str = None,
         verbose: bool = False,
     ) -> None:
@@ -96,7 +96,7 @@ class Model(nn.Module):
 
         Args:
             model (Union[str, Path], optional): The path or model file to load or create. This can be a local
-                file path, a model name from Ultralytics HUB, or a Triton Server model. Defaults to 'yolov8n.pt'.
+                file path, a model name from Ultralytics HUB, or a Triton Server model. Defaults to 'IMC-YOLO.pt'.
             task (Any, optional): The task type associated with the YOLO model, specifying its application domain.
                 Defaults to None.
             verbose (bool, optional): If True, enables verbose output during the model's initialization and subsequent
@@ -135,7 +135,7 @@ class Model(nn.Module):
             return
 
         # Load or create new YOLO model
-        model = checks.check_model_file_from_stem(model)  # add suffix, i.e. yolov8n -> yolov8n.pt
+        model = checks.check_model_file_from_stem(model)  # add suffix, i.e. IMC-YOLO -> IMC-YOLO.pt
         if Path(model).suffix in (".yaml", ".yml"):
             self._new(model, task=task, verbose=verbose)
         else:
@@ -247,7 +247,7 @@ class Model(nn.Module):
                 f"model='{self.model}' should be a *.pt PyTorch model to run this method, but is a different format. "
                 f"PyTorch models can train, val, predict and export, i.e. 'model.train(data=...)', but exported "
                 f"formats like ONNX, TensorRT etc. only support 'predict' and 'val' modes, "
-                f"i.e. 'yolo predict model=yolov8n.onnx'.\nTo run CUDA or MPS inference please pass the device "
+                f"i.e. 'yolo predict model=IMC-YOLO.onnx'.\nTo run CUDA or MPS inference please pass the device "
                 f"argument directly in your inference command, i.e. 'model.predict(source=..., device=0)'"
             )
 
@@ -273,7 +273,7 @@ class Model(nn.Module):
             p.requires_grad = True
         return self
 
-    def load(self, weights: Union[str, Path] = "yolov8n.pt") -> "Model":
+    def load(self, weights: Union[str, Path] = "IMC-YOLO.pt") -> "Model":
         """
         Loads parameters from the specified weights file into the model.
 
@@ -281,7 +281,7 @@ class Model(nn.Module):
         name and shape and transfers them to the model.
 
         Args:
-            weights (str | Path): Path to the weights file or a weights object. Defaults to 'yolov8n.pt'.
+            weights (str | Path): Path to the weights file or a weights object. Defaults to 'IMC-YOLO.pt'.
 
         Returns:
             self (ultralytics.engine.model.Model): The instance of the class with loaded weights.

@@ -32,7 +32,7 @@ from ultralytics import YOLO
 from threading import Thread
 
 # Instantiate the model outside the thread
-shared_model = YOLO("yolov8n.pt")
+shared_model = YOLO("IMC-YOLO.pt")
 
 
 def predict(image_path):
@@ -89,7 +89,7 @@ from threading import Thread
 
 def thread_safe_predict(image_path):
     # Instantiate a new model inside the thread
-    local_model = YOLO("yolov8n.pt")
+    local_model = YOLO("IMC-YOLO.pt")
     results = local_model.predict(image_path)
     # Process results
 

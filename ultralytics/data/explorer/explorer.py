@@ -56,7 +56,7 @@ class Explorer:
     def __init__(
         self,
         data: Union[str, Path] = "coco128.yaml",
-        model: str = "yolov8n.pt",
+        model: str = "IMC-YOLO.pt",
         uri: str = USER_CONFIG_DIR / "explorer",
     ) -> None:
         # Note duckdb==0.10.0 bug https://github.com/ultralytics/ultralytics/pull/8181

@@ -6,11 +6,11 @@ from ultralytics.engine.exporter import Exporter
 from ultralytics.models.yolo import classify, detect, segment
 from ultralytics.utils import ASSETS, DEFAULT_CFG, WEIGHTS_DIR
 
-CFG_DET = "yolov8n.yaml"
-CFG_SEG = "yolov8n-seg.yaml"
-CFG_CLS = "yolov8n-cls.yaml"  # or 'squeezenet1_0'
+CFG_DET = "IMC-YOLO.yaml"
+CFG_SEG = "IMC-YOLO-seg.yaml"
+CFG_CLS = "IMC-YOLO-cls.yaml"  # or 'squeezenet1_0'
 CFG = get_cfg(DEFAULT_CFG)
-MODEL = WEIGHTS_DIR / "yolov8n"
+MODEL = WEIGHTS_DIR / "IMC-YOLO"
 
 
 def test_func(*args):  # noqa

@@ -3,18 +3,18 @@
 Check a model's accuracy on a train or val split of a dataset.
 
 Usage:
-    $ yolo mode=val model=yolov8n.pt data=coco128.yaml imgsz=640
+    $ yolo mode=val model=IMC-YOLO.pt data=coco128.yaml imgsz=640
 
 Usage - formats:
-    $ yolo mode=val model=yolov8n.pt                 # PyTorch
-                          yolov8n.torchscript        # TorchScript
-                          yolov8n.onnx               # ONNX Runtime or OpenCV DNN with dnn=True
+    $ yolo mode=val model=IMC-YOLO.pt                 # PyTorch
+                          IMC-YOLO.torchscript        # TorchScript
+                          IMC-YOLO.onnx               # ONNX Runtime or OpenCV DNN with dnn=True
                           yolov8n_openvino_model     # OpenVINO
-                          yolov8n.engine             # TensorRT
-                          yolov8n.mlpackage          # CoreML (macOS-only)
+                          IMC-YOLO.engine             # TensorRT
+                          IMC-YOLO.mlpackage          # CoreML (macOS-only)
                           yolov8n_saved_model        # TensorFlow SavedModel
-                          yolov8n.pb                 # TensorFlow GraphDef
-                          yolov8n.tflite             # TensorFlow Lite
+                          IMC-YOLO.pb                 # TensorFlow GraphDef
+                          IMC-YOLO.tflite             # TensorFlow Lite
                           yolov8n_edgetpu.tflite     # TensorFlow Edge TPU
                           yolov8n_paddle_model       # PaddlePaddle
                           yolov8n_ncnn_model         # NCNN

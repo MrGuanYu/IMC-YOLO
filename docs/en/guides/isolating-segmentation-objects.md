@@ -36,7 +36,7 @@ After performing the [Segment Task](../tasks/segment.md), it's sometimes desirab
     from ultralytics import YOLO
 
     # Load a model
-    model = YOLO('yolov8n-seg.pt')
+    model = YOLO('IMC-YOLO-seg.pt')
 
     # Run inference
     results = model.predict()

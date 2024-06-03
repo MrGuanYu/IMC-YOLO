@@ -150,7 +150,7 @@ For batch prediction on a directory of images:
 ```python
 predict(
     model_type="yolov8",
-    model_path="path/to/yolov8n.pt",
+    model_path="path/to/IMC-YOLO.pt",
     model_device="cpu",  # or 'cuda:0'
     model_confidence_threshold=0.4,
     source="path/to/dir",

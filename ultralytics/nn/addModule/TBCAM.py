@@ -39,9 +39,9 @@ class AttentionGate(nn.Module):
         return x * scale
 
 
-class TripletAttention(nn.Module):
+class TAttention(nn.Module):
     def __init__(self, no_spatial=False):
-        super(TripletAttention, self).__init__()
+        super(TAttention, self).__init__()
         self.cw = AttentionGate()
         self.hc = AttentionGate()
         self.no_spatial = no_spatial
@@ -91,7 +91,7 @@ class TBCAM(nn.Module):
     def __init__(self, in_planes, ratio=16, kernel_size=7):
         super(TBCAM, self).__init__()
         self.ca = cAttention(in_planes, ratio)
-        self.ta = TripletAttention(no_spatial=False)
+        self.ta = TAttention(no_spatial=False)
 
     def forward(self, x):
         out = x * self.ca(x)

@@ -88,7 +88,7 @@ class ObjectDetection:
         self.email_sent = False
 
         # model information
-        self.model = YOLO("yolov8n.pt")
+        self.model = YOLO("IMC-YOLO.pt")
 
         # visual information
         self.annotator = None

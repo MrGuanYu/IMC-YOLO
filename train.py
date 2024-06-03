@@ -1,11 +1,10 @@
 import warnings
 warnings.filterwarnings('ignore')
-from ultralytics import YOLO, RTDETR
-# unfold 1/2 1/2 hwd 四图拼一图
+
+from ultralytics import YOLO
+
 if __name__ == '__main__':
-    model = YOLO(r'D:\program\python\IMC-YOLO\ultralytics\cfg\models\v8\IMC-YOLO.yaml')
-    # model = RTDETR(r'D:\program\python\ultralytics_withV9\ultralytics\cfg\models\rt-detr\rtdetr-l.yaml')
-    # model.load('yolov8n.pt') # loading pretrain weights
+    model = YOLO(r'D:\program\python\IMC-YOLO\ultralytics\cfg\models\v8\yolov8n.yaml')
     model.train(task='detect',
                 data=r'D:\program\python\IMC-YOLO\dataset\razor_clam_burrows\data.yaml',
                 cache=False,
@@ -22,5 +21,5 @@ if __name__ == '__main__':
                 patience=100,
                 lr0=0.001,
                 plots=True,
-                project=r'runs'
+                project='runs'
                 )

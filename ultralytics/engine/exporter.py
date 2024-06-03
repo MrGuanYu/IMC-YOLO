@@ -4,15 +4,15 @@ Export a YOLOv8 PyTorch model to other formats. TensorFlow exports authored by h
 
 Format                  | `format=argument`         | Model
 ---                     | ---                       | ---
-PyTorch                 | -                         | yolov8n.pt
-TorchScript             | `torchscript`             | yolov8n.torchscript
-ONNX                    | `onnx`                    | yolov8n.onnx
+PyTorch                 | -                         | IMC-YOLO.pt
+TorchScript             | `torchscript`             | IMC-YOLO.torchscript
+ONNX                    | `onnx`                    | IMC-YOLO.onnx
 OpenVINO                | `openvino`                | yolov8n_openvino_model/
-TensorRT                | `engine`                  | yolov8n.engine
-CoreML                  | `coreml`                  | yolov8n.mlpackage
+TensorRT                | `engine`                  | IMC-YOLO.engine
+CoreML                  | `coreml`                  | IMC-YOLO.mlpackage
 TensorFlow SavedModel   | `saved_model`             | yolov8n_saved_model/
-TensorFlow GraphDef     | `pb`                      | yolov8n.pb
-TensorFlow Lite         | `tflite`                  | yolov8n.tflite
+TensorFlow GraphDef     | `pb`                      | IMC-YOLO.pb
+TensorFlow Lite         | `tflite`                  | IMC-YOLO.tflite
 TensorFlow Edge TPU     | `edgetpu`                 | yolov8n_edgetpu.tflite
 TensorFlow.js           | `tfjs`                    | yolov8n_web_model/
 PaddlePaddle            | `paddle`                  | yolov8n_paddle_model/
@@ -23,22 +23,22 @@ Requirements:
 
 Python:
     from ultralytics import YOLO
-    model = YOLO('yolov8n.pt')
+    model = YOLO('IMC-YOLO.pt')
     results = model.export(format='onnx')
 
 CLI:
-    $ yolo mode=export model=yolov8n.pt format=onnx
+    $ yolo mode=export model=IMC-YOLO.pt format=onnx
 
 Inference:
-    $ yolo predict model=yolov8n.pt                 # PyTorch
-                         yolov8n.torchscript        # TorchScript
-                         yolov8n.onnx               # ONNX Runtime or OpenCV DNN with dnn=True
+    $ yolo predict model=IMC-YOLO.pt                 # PyTorch
+                         IMC-YOLO.torchscript        # TorchScript
+                         IMC-YOLO.onnx               # ONNX Runtime or OpenCV DNN with dnn=True
                          yolov8n_openvino_model     # OpenVINO
-                         yolov8n.engine             # TensorRT
-                         yolov8n.mlpackage          # CoreML (macOS-only)
+                         IMC-YOLO.engine             # TensorRT
+                         IMC-YOLO.mlpackage          # CoreML (macOS-only)
                          yolov8n_saved_model        # TensorFlow SavedModel
-                         yolov8n.pb                 # TensorFlow GraphDef
-                         yolov8n.tflite             # TensorFlow Lite
+                         IMC-YOLO.pb                 # TensorFlow GraphDef
+                         IMC-YOLO.tflite             # TensorFlow Lite
                          yolov8n_edgetpu.tflite     # TensorFlow Edge TPU
                          yolov8n_paddle_model       # PaddlePaddle
                          yolov8n_ncnn_model         # NCNN
@@ -599,7 +599,7 @@ class Exporter:
             model = IOSDetectModel(self.model, self.im) if self.args.nms else self.model
         else:
             if self.args.nms:
-                LOGGER.warning(f"{prefix} WARNING ⚠️ 'nms=True' is only available for Detect models like 'yolov8n.pt'.")
+                LOGGER.warning(f"{prefix} WARNING ⚠️ 'nms=True' is only available for Detect models like 'IMC-YOLO.pt'.")
                 # TODO CoreML Segment and Pose model pipelining
             model = self.model
 

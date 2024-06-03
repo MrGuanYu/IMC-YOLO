@@ -435,7 +435,7 @@ def check_torchvision():
             )
 
 
-def check_suffix(file="yolov8n.pt", suffix=".pt", msg=""):
+def check_suffix(file="IMC-YOLO.pt", suffix=".pt", msg=""):
     """Check file(s) for acceptable suffix."""
     if file and suffix:
         if isinstance(suffix, str):
@@ -465,10 +465,10 @@ def check_yolov5u_filename(file: str, verbose: bool = True):
     return file
 
 
-def check_model_file_from_stem(model="yolov8n"):
+def check_model_file_from_stem(model="IMC-YOLO"):
     """Return a model filename from a val model stem."""
     if model and not Path(model).suffix and Path(model).stem in downloads.GITHUB_ASSETS_STEMS:
-        return Path(model).with_suffix(".pt")  # add suffix, i.e. yolov8n -> yolov8n.pt
+        return Path(model).with_suffix(".pt")  # add suffix, i.e. IMC-YOLO -> IMC-YOLO.pt
     else:
         return model
 
@@ -622,7 +622,7 @@ def check_amp(model):
         from ultralytics import YOLO
         from ultralytics.utils.checks import check_amp
 
-        model = YOLO('yolov8n.pt').model.cuda()
+        model = YOLO('IMC-YOLO.pt').model.cuda()
         check_amp(model)
         ```
 
@@ -648,7 +648,7 @@ def check_amp(model):
     try:
         from ultralytics import YOLO
 
-        assert amp_allclose(YOLO("yolov8n.pt"), im)
+        assert amp_allclose(YOLO("IMC-YOLO.pt"), im)
         LOGGER.info(f"{prefix}checks passed ✅")
     except ConnectionError:
         LOGGER.warning(f"{prefix}checks skipped ⚠️, offline and unable to download YOLOv8n. {warning_msg}")
