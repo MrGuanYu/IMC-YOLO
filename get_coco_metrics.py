@@ -6,7 +6,7 @@ from pycocotools.cocoeval import COCOeval
 def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--anno_json', type=str, default=r'dataset/razor_clam_burrows/data.json', help='training model path')
-    parser.add_argument('--pred_json', type=str, default=r"runs/val/exp2/predictions.json")
+    parser.add_argument('--pred_json', type=str, default=r"runs/val/exp/predictions.json")
     return parser.parse_known_args()[0]
 
 
